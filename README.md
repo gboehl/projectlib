@@ -1,6 +1,5 @@
 
 # Companion Codes
-## Companion codes to replicate key-figures from my papers
 
 The full papers can be found on my website: [gregorboehl.com](gregorboehl.com)
 
