@@ -12,7 +12,7 @@ The folders are each self-contained and the code is modified such that you can r
 
 E.g: `python coef.py`
 
-The simulation code is written in Python. Although I used Python version 3.6.4 the code should be backwards compatible and also run under Python 2.7 (not tested). I did not test any of the code under Windows of Mac OS.
+The simulation code is written in Python. Although I used Python version 3.7+ the code should be backwards compatible and also run under Python 2.7 (not tested). I did not test any of the code under Windows of Mac OS.
 
 ## mp_spec
 ### Codes for "Monetary Policy and Speculative Stock Markets"
