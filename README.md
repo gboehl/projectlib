@@ -6,7 +6,6 @@ The full papers can be found on my website: [gregorboehl.com](gregorboehl.com)
 This repo contains the codes for
 
 1. mp_spec: Monetary Policy and Speculative Stock Markets 
-2. taxation_wealth_dynamics: Can Taxation Predict US Top-Wealth Share Dynamics? (w. Thomas Fischer)
 
 The folders are each self-contained and the code is modified such that you can run it directly from within a folder that contains all the files, i.e. via command line: 
 
@@ -27,14 +26,3 @@ The *.py files are the following:
 
 Additionally I provide the data files (*.xlsx) containing the data as described in the paper.
 
-## taxation_wealth_dynamics
-### Codes for "Can Taxation Predict US Top-Wealth Share Dynamics" (w. Thomas Fischer)
-
-The *.py files are the following:
-  
-   * lib.py: definitions of functions used by other files.
-   * oos.py: simulations/out-of-sample forecasts
-   * residual.py: plot residuals and show residual analisis
-   * projections.py: tax projections
-
-Additionally I provide the data file (datac.npz) containing the data as described in the paper.
