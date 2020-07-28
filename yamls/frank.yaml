@@ -1,0 +1,277 @@
+# frank.yaml ---
+#
+# Description: variant of Smets & Wouters model with BGG-type financial friction
+# Authors: Gregor Boehl [gboehl@uni-bonn.de] & Felix Strobel [felix.strobel@bundesbank.de]
+#
+
+declarations:
+  name: 'frank'
+  #variables: [spread, dc, dy, di, dw, c, c_r, c_h2m, r, rn, i, q, k, kb, rk, w, wh, l, l_r, l_h2m, Pi, y, mc, z, u, g, eps_i, eps_p, eps_w, eps_r, cf, cf_r, cf_h2m, rf, i_f, qf, kf, kbf, rkf, whf, lf, lf_r, lf_h2m, yf, y_gap, rktilde, n, eps_fin]
+  variables: [spread, dc, dy, di, dw, c, c_r, c_h2m, r, rn, i, q, k, kb, rk, w, wh, l, l_r, l_h2m, Pi, y, mc, z, u, g, eps_i, eps_p, eps_w, eps_r, cf, cf_r, cf_h2m, rf, i_f, qf, kf, kbf, rkf, whf, lf, lf_r, lf_h2m, yf, y_gap, rktilde, n]
+  constrained: [r]
+  #shocks: [e_g, e_z, e_u, e_r, e_i, e_p, e_w, e_fin]
+  shocks: [e_g, e_z, e_u, e_r, e_i, e_p, e_w]
+  parameters: [tpr_beta, lamb, lamb_w, phi_dy, h, phiss, i_p, i_w, alpha, epsilon, zeta_w, zeta_p, sig_c, sig_l, Phi_p, psi, rho_g, rho_u, rho_z, rho_p, rho_i, rho_w, rho_r, rho, mu_p, mu_w, phi_pi, phi_y, L, G_Y, sig_z, sig_g, sig_i, sig_r, sig_p, sig_w, sig_u, delta, trend, mean_l, mean_Pi, rho_gz, elb_level, rho_fin, sig_fin, Fstar, gammstar, mean_spread, zeta_spb]
+  para_func: [Fom, sprd, PI, gamma, beta, betabar, RR, RK, RKstar, lamb_p, W, K, k_1, K_Y, Y, I, C, c_2, kappa, kappa_w, x_bar, zW, sigW, F, G, omegabar, GAMMA, Fprime, dGdomega, d2Gdomega2, dGammadomega, d2Gammadomega2, dGdsigma, d2Gdomegadsigma, dGammadsigma, d2Gammadomegadsigma,  MU, nK, Rhostar, GammamuG, GammamuGprime, zeta_bw, zeta_zw, zeta_bw_zw, zeta_Gw, zeta_Gsigw, zeta_bsigw, zeta_zsigw, zeta_spsigw, zeta_nRk, zeta_nR, zeta_nq, zeta_nn, zeta_nsigw]
+  #observables: [GDP, Cons, Inv, Lab, Infl, Wage, FFR, BAASpread]
+  observables: [GDP, Cons, Inv, Lab, Infl, Wage, FFR]
+
+equations:
+  model:
+    - z      = whf + alpha*(lf-kf)
+    - kf     = whf - rkf + lf
+    - kf     = (1-psi)/psi*rkf + kbf(-1)
+    - i_f   = (1/(1+betabar*gamma))* (  i_f(-1) + betabar*gamma*i_f(1)+(1/(gamma^2*phiss))*qf ) +eps_i
+    - kbf   =  (1-k_1)*kbf(-1)+(k_1)*i_f +  (1+betabar*gamma)*(k_1)*(gamma^2*phiss)*eps_i
+    - yf     = Phi_p*(alpha*kf + (1-alpha)*lf + z)
+    - yf     = g + C/Y*cf + I/Y*i_f + RK*K_Y*(1-psi)/psi*rkf
+
+    - cf_r   = (h/gamma)/(1+h/gamma)*cf_r(-1) + (1/(1+h/gamma))*cf_r(1) + ((sig_c-1)*c_2/(sig_c*(1+h/gamma)))*(lf_r-lf_r(1)) - (1-h/gamma)/(sig_c*(1+h/gamma))*(rf + u)
+    - cf_h2m = whf + lf_h2m
+    - whf    = 1/(1-h/gamma)*(cf_r-h/gamma*cf_r(-1)) + sig_l*lf_r
+    - whf    = 1/(1-h/gamma)*(cf_h2m-h/gamma*cf_h2m(-1)) + sig_l*lf_h2m
+    - lf     = lamb*lf_h2m+(1-lamb)*lf_r 
+    - cf     = lamb*cf_h2m+(1-lamb)*cf_r 
+
+    - c_r   = (h/gamma)/(1+h/gamma)*c_r(-1) + (1/(1+h/gamma))*c_r(1) +((sig_c-1)*c_2/(sig_c*(1+h/gamma)))*(l_r-l_r(1)) - (1-h/gamma)/(sig_c*(1+h/gamma))*(r-Pi(+1)+u)
+    - c_h2m = w + l_h2m
+    - wh    = 1/(1-h/gamma)*(c_r-h/gamma*c_r(-1)) + sig_l*l_r
+    - wh    = 1/(1-h/gamma)*(c_h2m-h/gamma*c_h2m(-1)) + sig_l*l_h2m
+    - l     = lamb*l_h2m+(1-lamb)*l_r 
+    - c     = lamb*c_h2m+(1-lamb)*c_r 
+
+    - mc    = w - z + alpha*(l-k)
+    - k     = w - rk + l
+    - k     = (1-psi)/psi*rk + kb(-1)
+    - i     = (1/(1+betabar*gamma))* (  i(-1) + betabar*gamma*i(1)+(1/(gamma^2*phiss))*q ) +eps_i
+    - w     = (1/(1+betabar*gamma))*w(-1)+(betabar*gamma/(1+betabar*gamma))*w(1)+(i_w/(1+betabar*gamma))*Pi(-1)-(1+betabar*gamma*i_w)/(1+betabar*gamma)*Pi+(betabar*gamma)/(1+betabar*gamma)*Pi(1)+ kappa_w*(wh-w) + eps_w
+    - kb    = (1-k_1)*kb(-1)+k_1*i + (1+betabar*gamma)*k_1*gamma^2*phiss*eps_i
+    - y     = Phi_p*(alpha*k + (1-alpha)*l + z)
+    - y     = g + C/Y*c + I/Y*i + RK*K_Y*(1-psi)/psi*rk
+    - Pi    = (1/(1+betabar*gamma*i_p)) * (betabar*gamma*Pi(1) +i_p*Pi(-1)) + kappa*mc + eps_p
+    
+    - rktilde = Pi + (RK/(RK+(1-delta)))*rk + ((1-delta)/(RK+(1-delta)))*q-q(-1) 
+    - rktilde(+1) = r + u + zeta_spb*(q+kb-n)
+    - n      = zeta_nRk*(rktilde-Pi)-zeta_nR*(r(-1) - Pi)+ zeta_nq*(q(-1)+kb(-1))+zeta_nn*n(-1)
+    - qf = RK/(RK+1-delta)*rkf(+1)+(1-delta)/(RK+1-delta)*qf(+1)-rf-u;
+    
+    - y_gap = y-yf
+    - spread= rktilde(+1)-r
+    - dc    = c - c(-1)
+    - dy    = y - y(-1)
+    - di    = i - i(-1)
+    - dw    = w - w(-1)
+
+    - z     = rho_z*z(-1) + e_z
+    - u     = rho_u*u(-1) + e_u
+    - eps_i     = rho_i*eps_i(-1) + e_i
+    - eps_r     = rho_r*eps_r(-1) + e_r
+    #- eps_fin = rho_fin*eps_fin(-1)+e_fin
+
+    - g     = rho_g*g(-1) + e_g + rho_gz*e_z
+    - eps_p = rho_p*eps_p(-1) + e_p - mu_p*e_p(-1)
+    - eps_w = rho_w*eps_w(-1) + e_w - mu_w*e_w(-1)
+    - rn     =  rho*rn(-1) + (1-rho)*(phi_pi*Pi + phi_y*y_gap + phi_dy*(y_gap-y_gap(-1))) + eps_r
+
+  constraint:
+    - r     =  rn
+
+  observables:
+    GDP  :   trend + dy
+    Cons :   trend + dc
+    Inv  :   trend + di
+    Wage :   trend + dw
+    Lab  :   mean_l + l 
+    Infl :   mean_Pi + Pi
+    FFR  :   (PI/((beta)*(gamma)^(-(sig_c)))-1)*100 + r
+    #BAASpread:  mean_spread + spread 
+     
+calibration:
+  parafunc:
+    Fom     : 1-(1-Fstar)^(1/4) # F(omega) from annualized to quarterly default prob
+    sprd    : (1+mean_spread/100) # stst spread from perc to gross rate
+
+    PI      : mean_Pi/100+1
+    gamma   : trend/100+1
+    beta    : 100/(tpr_beta+100)
+    betabar : beta*gamma^(-sig_c)
+    RR      : 1/betabar
+    RK      : 1/betabar*sprd -(1-delta)
+    RKstar  : RR*PI*sprd
+    lamb_p  : Phi_p
+    W       : ((1/lamb_p)*alpha^alpha*(1-alpha)^(1-alpha)*RK^(-alpha))^(1/(1-alpha))
+    K       : alpha/(1-alpha)*W/RK*L
+    k_1     : (1-(1-delta)/gamma)
+    K_Y     : Phi_p*((((1-alpha)/alpha)*(RK/W)))^(alpha-1)
+    Y       : K/(K_Y) 
+    I       : ((1-(1-delta)/gamma)*gamma)*K
+    C       : (1-G_Y)*Y-I
+    c_2     : (1/lamb_w)*(1-alpha)/alpha*RK*K/C
+    kappa   : (1-zeta_p*betabar*gamma)*(1-zeta_p)/((1+i_p*betabar*gamma)*zeta_p*((Phi_p-1)*epsilon+1))
+    kappa_w : (1-zeta_w)*(1-zeta_w*betabar*gamma)/((1+betabar*gamma)*zeta_w*((lamb_w-1)*epsilon+1))
+    x_bar  :   -(PI/((beta)*(gamma)^(-(sig_c)))-1)*100 + elb_level
+
+    zW       : normppf(Fom, 0, 1) # default threshold
+    F        : normcdf(zW, 0, 1) # quarterly probability of default
+    Fprime   : normpdf(zW,0,1) # first derivative of default probability w.r.t default threshold
+
+    # the iteration loop is outsourced to an external function
+    sigW     : calc_sigW(zW, sprd, zeta_spb)
+    G        : normcdf(zW-sigW, 0, 1) # term associated with losses due to defaults
+    omegabar : exp(sigW*zW-1/2*sigW^2) # transformed default threshold    
+    GAMMA    : omegabar*(1-F)+G # term associated with gains from loan
+
+    # evaluate BGG function elasticities
+    dGdomega        : Fprime/sigW # first derivative of G w.r.t omegabar
+    d2Gdomega2      : -zW*Fprime/omegabar/sigW^2 # second derivative of G w.r.t omegabar
+    dGammadomega    : 1-F # first derivative of Gamma w.r.t omegabar
+    d2Gammadomega2  : -Fprime/omegabar/sigW # second derivative of Gamma w.r.t omegabar
+    dGdsigma        : -zW*normpdf(zW-sigW,0,1)/sigW # first derivative of G w.r.t sigW
+    d2Gdomegadsigma : -Fprime*(1-zW*(zW-sigW))/sigW^2 # cross-derivative of G w.r.t sigW und omegabar
+    dGammadsigma    : -normpdf(zW-sigW,0,1) # first derivative of Gamma w.r.t sigW
+    d2Gammadomegadsigma : (zW/sigW-1)*Fprime # cross-derivative of Gamma w.r.t sigW und omegabar
+
+    # evaluate mu, nK, and Rhostar
+    MU : (1-1/sprd)/(dGdomega/dGammadomega*(1-GAMMA)+G) # monitoring cost parameter
+    nK : 1-(GAMMA-MU*G)*sprd # 
+    Rhostar : 1/nK-1
+    GammamuG : GAMMA-MU*G
+    GammamuGprime : dGammadomega-MU*dGdomega
+
+    # some elasticities wrt omegabar, zW, sigW, etc.
+    zeta_bw     : omegabar*MU*nK*(d2Gammadomega2*dGdomega-d2Gdomega2*dGammadomega)/(dGammadomega-MU*dGdomega)^2/sprd/(1-GAMMA+dGammadomega*(GAMMA-MU*G)/(dGammadomega-MU*dGdomega))
+    zeta_zw     : omegabar*(dGammadomega-MU*dGdomega)/(GAMMA-MU*G)
+    zeta_bw_zw  : zeta_bw/zeta_zw
+
+    zeta_Gw     : dGdomega/G*omegabar
+    zeta_Gsigw  : dGdsigma/G*sigW
+    zeta_bsigw  : sigW*(((1-MU*dGdsigma/dGammadsigma)/(1-MU*dGdomega/dGammadomega)-1)*dGammadsigma*sprd+MU*nK*(dGdomega*d2Gammadomegadsigma-dGammadomega*d2Gdomegadsigma)/GammamuGprime^2)/((1-GAMMA)*sprd+dGammadomega/GammamuGprime*(1-nK))
+    zeta_zsigw  : sigW*(dGammadsigma-MU*dGdsigma)/GammamuG
+    zeta_spsigw : (zeta_bw_zw*zeta_zsigw-zeta_bsigw)/(1-zeta_bw_zw)
+
+# elasticities of net worth wrt. to elements in l.o.m. for net worth
+    zeta_nRk    : gammstar*RKstar/PI/gamma*(1+Rhostar)*(1-MU*G*(1-zeta_Gw/zeta_zw))
+    zeta_nR     : gammstar/beta*(1+Rhostar)*(1-nK+MU*G*sprd*zeta_Gw/zeta_zw)
+    zeta_nq     : gammstar*RKstar/PI/gamma*(1+Rhostar)*(1-MU*G*(1+zeta_Gw/zeta_zw/Rhostar))-gammstar/beta*(1+Rhostar)
+    zeta_nn     : gammstar/beta+gammstar*RKstar/PI/gamma*(1+Rhostar)*MU*G*zeta_Gw/zeta_zw/Rhostar
+    zeta_nsigw  : gammstar*RKstar/PI/gamma*(1+Rhostar)*MU*G*(zeta_Gsigw-zeta_Gw/zeta_zw*zeta_zsigw)
+
+  parameters:
+    #Financial Frictions Parameters
+    #sigW : 0.381868868313109 # stst dispersion of ideosyncratic shock  - Value=Result by Del Negro et al.
+    Fstar       : 0.03 # stst default rate
+    gammstar    : 0.99 # stst survival of entrepreneurs
+    mean_spread : .5 # if :0, then RK : frictionless RK -> steady state changes
+    zeta_spb : 0.0443 # elasticity of spread wrt. leverage
+
+    elb_level: 0.05
+    lamb: 0
+    epsilon : 10
+    lamb_w: 1.5
+    L : 0.33
+
+    delta : 0.025
+    tpr_beta: 0.25
+    trend: 0.341 # estimated trend in sw:full
+    mean_l: 4.938 # estimated mean in sw:full
+    mean_Pi : 0.784 # estimated mean in sw:full
+    alpha   : 0.2
+    sig_c   : 1.5
+    sig_l   : 2.
+    Phi_p   : 1.5
+    h       : 0.7
+    zeta_w  : 0.7
+    zeta_p  : 0.7
+    i_w     : 0.4
+    i_p     : 0.4
+    phiss   : 6.
+    psi     : 0.7
+    phi_pi  : 1.7
+    phi_y   : 0.125
+    phi_dy  : 0.125
+    G_Y     : 0.18
+
+    rho     : 0.8
+    rho_r   : 0.7
+    rho_z   : 0.7
+    rho_u   : 0.7
+    rho_g   : 0.7
+    rho_i   : 0.7
+    rho_p   : 0.7
+    rho_w   : 0.7
+    rho_fin : 0.7
+
+    mu_w    : 0.3
+    mu_p    : 0.3
+    rho_gz  : 0.5
+  
+    sig_g   : 0.4
+    sig_u   : 2.0
+    sig_z   : 0.3
+    sig_r   : 0.2
+    sig_i   : 0.3
+    sig_p   : 0.3
+    sig_w   : 1.5
+    sig_fin : 0.3
+
+  covariances:
+    e_z    : sig_z
+    e_g    : sig_g
+    e_i    : sig_i
+    e_u    : sig_u
+    e_r    : sig_r
+    e_p    : sig_p
+    e_w    : sig_w
+    #e_fin  : sig_fin
+
+estimation:
+  prior:
+
+    # name  : [initval, lb, ub, dist_type, dist_p1, dist_p2]
+    sig_c   : [1.2312,0.25,3,normal,1.50,0.375]
+    sig_l   : [2.8401,0.25,6,normal,2,0.75]
+    tpr_beta: [0.7420,0.01,1.0,gamma,0.25,0.1]
+    h       : [0.7205,0.3,0.95,beta,0.7,0.1]
+    phiss   : [6.3325,2,12,normal,4,1.5]
+    i_p     : [0.3291,0.01,0.9,beta,0.5,0.15]
+    i_w     : [0.4425,0.01,0.9,beta,0.5,0.15]
+    alpha   : [0.24,0.05,0.4,normal,0.3,0.05]
+    zeta_p  : [0.7813,0.4,0.99,beta,0.5,0.10]
+    zeta_w  : [0.7937,0.4,0.99,beta,0.5,0.1]
+    Phi_p   : [1.4672,1.0,2.0,normal,1.25,0.125]
+    psi     : [0.2648,0.01,.99,beta,0.5,0.15]
+
+    phi_pi  : [1.7985,.7,2.5,normal,1.5,0.25]
+    phi_y   : [0.0893,0.001,0.6,normal,0.125,0.05]
+    phi_dy  : [0.2239,0.001,0.6,normal,0.125,0.05]
+    rho     : [0.8258,0.3,0.975,beta,0.75,0.10]
+
+    rho_r   : [.3,.01,.9999,beta,0.5,0.2]
+    rho_g   : [.9930,.01,.9999,beta,0.5,0.2]
+    rho_z   : [.9676 ,.01,.9999,beta,0.5,0.2]
+    rho_u   : [.2703,.01,.9999,beta,0.5,0.2]
+    rho_p   : [.8692,.001,.9999,beta,0.5,0.2]
+    rho_w   : [.9546,.001,.9999,beta,0.5,0.2]
+    rho_i   : [.5724,.01,.9999,beta,0.5,0.2]
+
+    mu_p    : [.7652,0.01,.9999,beta,0.5,0.2]
+    mu_w    : [.8936,0.01,.9999,beta,0.5,0.2]
+    rho_gz  : [0.05,0.01,1.5,normal,0.5,0.25]
+
+    sig_g : [0.6090,0.01,3,inv_gamma_dynare,0.1,2]
+    sig_u : [0.1818513,0.025,9,inv_gamma_dynare,0.1,2]
+    sig_z : [0.4618,0.01,3,inv_gamma_dynare,0.1,2]
+    sig_r : [0.2397,0.01,3,inv_gamma_dynare,0.1,2]
+    sig_p : [0.1455,0.01,3,inv_gamma_dynare,0.1,2]
+    sig_w : [0.2089,0.01,3,inv_gamma_dynare,0.1,2]
+    sig_i : [0.46017,0.01,3,inv_gamma_dynare,0.1,2]
+
+    #rho_fin : [.95,.001,.9999,beta,0.5,0.2]
+    #sig_fin : [0.05,0.01,3,inv_gamma_dynare,0.1,2]
+
+    trend : [0.3982,0.1,0.8,normal,0.44,0.05]   # Kulish et al. (2017)
+    mean_l : [4.2918,-4.0,4.0,normal,0.0,2.0]
+    mean_Pi : [0.7,0.1,2.0,gamma,0.625,0.1]
+
+    mean_spread : [.5,.1,2.,normal,.5,.1]
+    zeta_spb: [0.044,0.01,0.999,beta,0.05,0.005]

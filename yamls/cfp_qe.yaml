@@ -1,0 +1,327 @@
+# cfp_qe.yaml ---
+#
+# Description: Replication of Carlstrom, Fuerst and Paustian (2017, AEJMacro)
+# Authors: Gavin Goy [g.w.goy@dnb.nl] & Gregor Boehl [gboehl@uni-bonn.de] 
+#
+# Changes to the published version:
+# 1. QE added as observable
+# 2. Added QE shock with parameters: rho1_b rho2_b sig_qe
+# 3. Added central bank bond holdings variable: bcb
+# 4. Some changes to the measurement equations, due to our different data treatment
+
+
+declarations:
+    name: 'cfp_qe'
+    variables: [dy, di, dw, rn, mrs, pinw, mkw, mk, qnat, qi, m, lev, muc, c, L, w, a, r1, r2, rshad, rk, pin, y, mp, q, f, d, b2, nw, k, i, pk, mc, r10, term_prem, r10_nat, muinv, u_psi, mucf, cf, r1f, pinf, pkf, mf, rkf, qif, r2f, Lf, wf, yf, kf, iif, ff, nwf, term_premf, r10f, r10_natf, qnatf, qf, b2f, ygap, levf, bcb]  # bn bb2 extb2 r10s r10me ext extf
+    constrained: [r1]
+    shocks: [eps_a, eps_mp, eps_i, eps_psi, eps_mk, eps_mkw, eps_rn, eps_qe]
+    parameters: [mean_ffr, mean_pin, trend, mean_tp, mean_L, kappaw, lambdaw, rhomkw, rhomk, theta_p, psi_n, duri, nwss, h, dur, kappapc, lambdap, sigma, beta, alpha, delta, phi, tau_pi, rho_a, eta, rho_rn, eps, rhom, rhoi, gamma, tau_y, rho_phi, rho_mu, sig_a, sig_i, sig_mp, sig_mk, sig_mkw, sig_rn, sig_psi, root1, root2, sig_qe, elb_level] # mean_r10 rhor10me rhonw psi rhoinv
+    para_func: [qss, b2ss, R1ss, R2ss, kyss, kss, fss, fn, iss, yss, ass, mcss, kappa_i, kappa, mss, dss, css, xss, sp, cnu, ups, b2n, rho1_b, rho2_b, premss, x_bar]
+    observables: [FFR, Infl_PCE, GDP, Inv, Lab, Wage, ACMTP10, QE_tot] 
+
+equations:
+  model:
+    # (32) Marginal Utility of Consumption:
+    - muc = (beta*h*c(+1)-(1+beta*h^2)*c+h*c(-1))/((1-h*beta)*(1-h))+rn*(1-h*beta*rho_rn)/(1-h*beta)
+    - mucf = (beta*h*cf(+1)-(1+beta*h^2)*cf+h*cf(-1))/((1-h*beta)*(1-h))+rn*(1-h*beta*rho_rn)/(1-h*beta)
+    
+    # (33) Labor Supply:
+    - mrs = eta*L + rn - muc
+    - eta*Lf+rn = wf + mucf
+    
+    # (34) Fisher Equation:
+    - muc = r1 - pin(+1) + muc(+1)
+    - mucf = r1f - pinf(+1) + mucf(+1)
+    
+    # (35) Euler Equation:
+    - muc+pk+m = muc(+1) + (1-beta*(1-delta))*rk(+1) + beta*(1-delta)*(pk(+1)+m(+1))
+    - mucf+pkf+mf = mucf(+1) + (1-beta*(1-delta))*rkf(+1) + beta*(1-delta)*(pkf(+1)+mf(+1))
+    
+    # (36) Bond Issuance Equation:
+    - muc+qi+m = muc(+1) + beta*kappa_i*(qi(+1)+m(+1))-pin(+1)
+    - mucf+qif+mf = mucf(+1) + beta*kappa_i*(qif(+1) + mf(+1))-pinf(+1)
+    
+    # (37) Link between f and investment:
+    - (1-kappa_i)*(i+pk) = f - kappa_i*(f(-1)+qi-qi(-1)-pin) # +f_index*(pin-EXPECTATION(-1)(pin)) 
+    - (1-kappa_i)*(iif+pkf) = ff - kappa_i*(ff(-1)+qif-qif(-1)-pinf) #+f_index*(pinf-EXPECTATION(-1)(pinf)) 
+    
+    # (39a) Return on the FI's Real Asset Portfolio:
+    - r2 = kappa_i*qi(+1)/R2ss - qi
+    - r2f = kappa_i*qif(+1)/R2ss - qif
+    
+    # (39b) Return on the FI's Real Asset Portfolio:
+    - r2 = kappa*q(+1)/R2ss - q
+    - r2f = kappa*qf(+1)/R2ss - qf
+    
+    # (40) Return on a 10-year Bond Available to FI:
+    - r10 = -((R2ss-kappa)/(R2ss))*q
+    - r10f = -((R2ss-kappa)/(R2ss))*qf
+    
+    # (41) One Period Spread:
+    - (r2-r1)*(gamma-1) = lev + (1+gamma*(premss-1))*u_psi
+    - (r2f-r1f)*(gamma-1) = levf + (1+gamma*(premss-1))*u_psi
+    
+    # (42) Net Worth Adjustment Cost:
+    - psi_n*nw = (premss*gamma*(r2-r1)+(gamma*(premss-1))*lev) / (1+gamma*(premss-1))
+    - psi_n*nwf = (premss*gamma*(r2f-r1f)+(gamma*(premss-1))*levf) / (1+gamma*(premss-1))
+    
+    # (43) Hold-up Constaint:
+    - lev = (b2ss/xss)*b2 + (1-b2ss/xss)*f - nw
+    - levf = (b2ss/xss)*b2f + (1-b2ss/xss)*ff - nwf
+    
+    # (44) Real Wage:
+    - w = mc + y - L
+    - wf = yf - Lf
+    
+    # (45) Real Rental Rate:
+    - rk = mc + y - k(-1)
+    - rkf = yf - kf(-1)
+    
+    # (46) Phillips Curve:
+    - pin*(1+beta*lambdap) = lambdap*pin(-1) + kappapc*mc + beta*pin(+1) + mk
+    
+    # (47) Investment Supply Decision:
+    - pk = phi*(i-i(-1)-beta*(i(+1)-i)) - muinv
+    - pkf = phi*(iif-iif(-1) - beta*(iif(+1)-iif)) - muinv
+    
+    # (48a) Accounting Identity:
+    - y = (css)*c + (iss)*i 
+    - yf = (css)*cf + (iss)*iif
+    
+    # (48b) Output:
+    - y = a + alpha*k(-1) + (1-alpha)*L
+    - yf = a + alpha*kf(-1) + (1-alpha)*Lf
+    
+    # (49) Capital Accumulation:
+    - k = (1-delta)*k(-1) + delta*(i+muinv)
+    - kf = (1-delta)*kf(-1) + delta*(iif+muinv)
+    
+    # (53) Price of EH Bond:
+    - r1 = kappa*qnat(+1)/R2ss - qnat
+    - r1f = kappa*qnatf(+1)/R2ss - qnatf
+    
+    # (54) Yield of EH Bond:
+    - r10_nat = -((R2ss-kappa)/(R2ss))*qnat
+    - r10_natf = -((R2ss-kappa)/(R2ss))*qnatf
+    
+    # (55) Term Premium:
+    - term_prem = r10 - r10_nat
+    - term_premf = r10f - r10_natf
+    
+    # Output Gap:
+    - ygap=y-yf
+    
+    # Wage Philips curve:
+    - pinw - lambdaw*pin(-1) = kappaw*(mrs-w) + beta*(pinw(+1)-lambdaw*pin) + mkw
+   
+    # LOM for wages
+    - w = w(-1) + pinw - pin
+    
+    # Bank balance sheet
+    - nw = - (gamma-1)*d + (b2ss/nwss)*b2 + (gamma-b2ss/nwss)*f
+    
+    # (57) QE POLICY SHOCK (here only AR(2))
+    - bcb = rho1_b*bcb(-1) + rho2_b*bcb(-2) + eps_qe
+    - b2 = -bcb
+    - b2f = b2
+       
+    # (A1) Productivity Shock:
+    - a = rho_a*a(-1) + eps_a
+    
+    # (A2) Credit Shock (psi=PHI in nonlinear):
+    - u_psi = rho_phi*u_psi(-1) + eps_psi
+    
+    # (A3) Investment Shock:
+    - muinv = rho_mu*muinv(-1) + eps_i
+    
+    # (A4) Monetary Policy Residual:
+    - mp = rhom*mp(-1)+eps_mp
+    
+    # Other shocks without numbers...
+    - mkw = rhomkw*mkw(-1)+eps_mkw
+    - mk = rhomk*mk(-1)+eps_mk
+    - rn = rho_rn*rn(-1)+eps_rn/(1-rho_rn) # innovation scaled to be in interest rate b.p.
+    
+    # (58) MONETARY POLICY RULE:
+    - rshad = rhoi*rshad(-1) + (1-rhoi)*(tau_pi*pin + tau_y*ygap)+mp  # + tau_prem*term_prem/4
+    - r1f  =rhoi*r1f(-1) + (1-rhoi)*(tau_pi*pinf)+mp            # + tau_prem*term_premf/4
+    
+    # Some equations that I took out of the model:
+    #- ext=rhoi*r1(+4)+(1-rhoi)*(tau_pi*pin(+5)+tau_y*ygap(+5)+tau_prem*term_prem(+5)/4)+mp
+    #- extf = 0
+    #- extb2 = 0
+    # Term Premium Policy:
+    #- r10s = 0
+    #- r10me = rhor10me*r10me(-1)+epsr10_me
+    #- r10me = 0
+    #- bb2=0
+    #- bn = b2
+    
+    # Some auxiliary variables
+    - dy = y-y(-1)
+    - di = i-i(-1)
+    - dw = w-w(-1)
+
+  constraint:
+    - r1    = rshad
+
+  observables:
+    FFR:        mean_ffr + r1    
+    Infl_PCE:   mean_pin + pin    
+    GDP:        trend + dy
+    Inv:        trend + di
+    Lab:        mean_L + L
+    Wage:       trend + dw
+    ACMTP10:    mean_tp + term_prem
+    QE_tot:     5.5 + bcb
+
+calibration:
+  parafunc:
+    #kappapc:    (1-sp)*(1-beta*sp)/sp
+    #kappaw:     (1-theta_w)*(1-beta*theta_w)/(theta_w*(1+eta*eps_w))
+    premss:     1+mean_tp/100
+    sp:         theta_p
+    kappa_i:    (duri-1)/(duri)
+    kappa:      kappa_i
+    mcss:       (eps-1)/eps
+    R1ss:       1/beta
+    R2ss:       R1ss*premss
+    qiss:       1/(R2ss-kappa_i)
+    kappa:      (dur-1)/(dur)
+    qss:        1/(R2ss-kappa)    
+    ups:        (gamma-1)/(gamma*premss)
+    cnu:        1/(ups*gamma*premss)
+    mss:        beta*(R2ss-kappa_i)/(1-beta*kappa_i)
+    kyss:       alpha*beta*mcss/(mss*(1-beta*(1-delta)))
+    kss:        kyss^(1/(1-alpha))
+    wss:        mcss*(1-alpha)*kss^alpha
+    yss:        kss^alpha
+    css:        yss-delta*kss
+    iss:        delta*kss 
+    b2n:        .4*gamma    # calibrate to 40% of bank assets held as securities
+    b2ss:       b2n*nwss
+    fn:         gamma-b2n
+    fss:        nwss*fn
+    xss:        fss+b2ss
+    dss:        (gamma-1)*nwss
+    zss:        R1ss*(gamma*premss+1)
+    ass:        gamma*nwss
+    x_bar:      -mean_ffr + elb_level
+    rho1_b:     root1 + root2
+    rho2_b:     -root1*root2
+    #LAM_ss:     (1-beta*h) / ((1-h)*css)
+    #B:          wss*LAM_ss
+    #b2n:        gamma*b2ss/(b2ss+fss)  #fraction of bank assets held as bonds
+    
+    # Notes:
+    #set long term debt as a fraction of net worth
+    #nw is normalized to unity
+    #set b2n between 0 and gamma, fn is then the residual
+    #b2n is the ratio of long bonds to net worth
+
+  parameters:
+    # Calibrated:
+    elb_level:  0.05
+    pkss:     1
+    nwss:     1
+    Lss:      1
+    
+    sigma:    1
+    eps:      5
+    beta:     0.99
+    alpha:    0.333
+    delta:    0.025
+    #premss:   1.0025
+    theta_p:  0.75
+    #theta_w:  0.96
+    dur:      40    # duration of government bonds
+    duri:     40    # duration of investment bonds
+    gamma:    6     # steady state leverage is gamma
+       
+    # Estimated:
+    eta:        2.0259
+    h:          0.6225
+    psi_n:      0.7850  # adjustment cost parameter -> networth elasticity 1/psi_n
+    phi:        3.2821   #supply curve for investment elasticity is 1/phi 
+    tau_pi:     1.4202
+    tau_y:      0.4906
+    rhoi:       0.7712
+    lambdap:    0.4175
+    lambdaw:    0.5110
+    kappapc:    0.0860
+    kappaw:     0.0002
+    
+    rho_a:      0.9921     
+    rho_mu:     0.8695
+    rho_phi:    0.9821
+    rhomk:      0.6650
+    rhomkw:     0.2059
+    rhom:       0.1564
+    rho_rn:     0.9483
+    root1:      0.9     # implies rho1_b = 1.8 and rho2_b = -0.81
+    root2:      0.9     
+    
+    ## means calibrated to match data moments from 1973Q1-2007Q4:
+    #mean_pin:   0.9976
+    #mean_L:     1.499
+    #trend:      0.428
+    mean_tp:    0.5446
+    #mean_ffr:   0.5228
+    #mean_r10:   1.5
+
+    ## prior means of great BS (202*)
+    mean_pin:   0.7030
+    mean_L:     2.4329
+    trend:      0.4174
+    mean_ffr:   1.4130
+    
+    sig_a:      0.6481
+    sig_i:      7.3454
+    sig_mp:     0.2151
+    sig_mk:     0.2442
+    sig_mkw:    1.4840  # added + 1 to 0.4840 
+    sig_rn:     0.1588
+    sig_psi:    2.7196
+    sig_qe:     1.7
+
+  covariances:
+    eps_a:      sig_a
+    eps_i:      sig_i
+    eps_mp:     sig_mp
+    eps_mk:     sig_mk
+    eps_mkw:    sig_mkw
+    eps_rn:     sig_rn
+    eps_psi:    sig_psi
+    eps_qe:     sig_qe
+
+estimation:
+  prior:
+      eta:        [1, 0.0001, 10, gamma, 2, 0.75]
+      h:          [0.6, 0.01, .9999, beta, .6, .1]
+      psi_n:      [1, 0, 10, uniform, 0, 10]
+      phi:        [3, 0, 10, gamma, 3, 1]
+      tau_pi:     [1.5, 1, 5, normal, 1.5, .1]
+      tau_y:      [0.5, 0, 2, normal, 0.5, .1]
+      rhoi:       [0.8, 0.01, .9999, beta, 0.8, 0.1]
+      lambdap:    [0.6, 0.01, .9999, beta, .6, .1]
+      lambdaw:    [0.6, 0.01, .9999, beta, .6, .1]
+      kappapc:    [0.2, 0.01, .9999, beta, 0.2, 0.1]
+      kappaw:     [0.2, 0.00001, .9999, beta, 0.2, 0.1]
+      rho_a:      [0.9, 0.01, .9999, beta, .6, .2]
+      rho_mu:     [0.6, 0.01, .9999, beta, .6, .2]
+      rho_phi:    [0.5, 0.01, .9999, beta, .6, .2]
+      rhomk:      [0.5, 0.01, .9999, beta, .6, .2]
+      rhomkw:     [0.5, 0.01, .9999, beta, .6, .2]
+      rhom:       [0.3, 0.01, .9999, beta, .6, .2]
+      rho_rn:     [0.3, 0.01, .9999, beta, .6, .2]
+      root1:      [0.3, 0.01, .9999, beta, .5, .2]
+      root2:      [0.3, 0.01, .9999, beta, .5, .2]
+            
+      sig_a:    [5, 0.0001, 10, inv_gamma_dynare, .5, 1]
+      sig_i:    [5, 0.0001, 10, inv_gamma_dynare, .5, 1]
+      sig_mp:   [.02, 0.0001, 10, inv_gamma_dynare, .1, 1]
+      sig_mk:   [.02, 0.0001, 10, inv_gamma_dynare, .1, 1]
+      sig_mkw:  [.02, 0.0001, 10, inv_gamma_dynare, .1, 1]
+      sig_rn:   [.02, 0.0001, 10, inv_gamma_dynare, .1, 1]
+      sig_psi:  [.5, 0.0001, 10, inv_gamma_dynare, .5, 1]
+      sig_qe:   [5,0.0001,10, inv_gamma_dynare, .1, 2]

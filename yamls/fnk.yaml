@@ -1,0 +1,125 @@
+# fnk.yaml ---
+#
+# Description: a small NK model with financial friction (as in "The Hocke Stick Phillips Curve and the Zero Lower Bound", with Philipp Lieberknecht)
+# Author: Gregor Boehl [mail@gregorboehl.com]
+#
+
+
+declarations:
+  name: 'financial_nk'
+  variables: [Pi, y, r, rn, mc, s, n, c, l, w, dy, a, u, vr]
+  constrained: [r]
+  parameters: [beta, zeta, sigma, eta, theta, nu, psi, phi_pi, phi_y, phi_s, rho_a, rho_u, rho_r, sig_a, sig_u, sig_r, trend, mean_pi, mean_spread, elb_level]
+  para_func: [kappa, x_bar]
+  shocks: [e_a, e_r, e_u]
+  observables: [GDP, Infl, FFR]
+
+equations:
+  model:
+    # Euler Equation
+    - c = c(+1) - 1/sigma*(r - Pi(+1) + u)
+
+    - y = l + a
+
+    - y = c
+
+    - w = eta*l + sigma*c
+
+    # Phillips Curve
+    - Pi = beta*Pi(+1) + kappa*mc
+
+    # marginal costs
+    - mc = w + theta*(r - Pi(+1) + s) - a
+
+    # endogenous spread
+    - s = nu*(w + l - n) + u
+
+    # net worth
+    - n = psi*y
+
+    # Taylor rule
+    - rn = phi_pi*Pi + phi_y*y + phi_s*u +  vr
+
+    # Technology Shock
+    - a = rho_a*a(-1) + e_a
+
+    # monetary policy shocks
+    - vr = rho_r*vr(-1) + e_r
+
+    # risk premium shock (exogenous spread)
+    - u = rho_u*u(-1) + e_u 
+
+    # output growth
+    - dy = y - y(-1)
+
+  constraint:
+    # ZLB
+    - r = rn
+    
+  observables:
+    # output growth
+    GDP : dy + trend
+
+    # observed inflation
+    Infl : Pi + mean_pi
+
+    # observed interest rate
+    FFR : r + (1/beta - 1)*100
+
+calibration:
+  parameters:
+    elb_level: .05
+    beta: .99
+    sigma: 1.
+    eta: .5
+    zeta: .66
+    theta: 1.
+    nu: 0.2
+    psi: 8
+    phi_pi: 1.5
+    phi_y: .2
+    phi_s: .0
+    rho_u: .9
+    rho_a: .9
+    rho_r: .7
+    sig_u: .1
+    sig_a: .1
+    sig_r: .1
+    trend: 0.405 # mean values from RANK estimation in BS (2020)
+    mean_pi: 0.659 # mean values from RANK estimation in BS (2020)
+    mean_spread: 0.414 # mean values from RANK-FF estimation in BS (2020)
+
+  parafunc:
+    kappa: (1-zeta)*(1-beta*zeta)/zeta
+    x_bar: -(1/beta - 1)*100 + elb_level
+
+  covariances:
+    e_a: sig_a
+    e_r: sig_r
+    e_u: sig_u
+
+estimation:
+  prior:
+    ## uniform function take upper & lower as input
+    ## inv_gamma_dynare function takes weird stuff as input
+    ## all other function take mean & std as input
+    #sigma : [1.2312,0.25,3,normal,1.50,0.375] # SW priors
+    #eta : [2.8401,0.25,6,normal,2,0.75] # SW priors
+    eta : [2.8401,0.25,6,normal,2,0.75] # SW priors
+    #zeta  : [0.7813,0.4,0.99,beta,0.5,0.10] # SW priors
+    nu      : [None, .001, .999, beta, .2, .2] # NEW
+    #psi     : [None, 1, 12, normal, 6, 2] # NEW
+    #i_p     : [0.3291,0.01,0.9,beta,0.5,0.15]
+    #h       : [0.7205,0.3,0.95,beta,0.7,0.1]
+    #phi_pi  : [1.7985,.7,2.5,normal,1.5,0.25]
+    #phi_y   : [0.0893,0.001,0.6,normal,0.125,0.05] # SW priors
+    rho_r   : [.3,.01,.9999,beta,0.7,0.1] # SW priors
+    rho_a   : [.9676 ,.01,.9999,beta,0.7,0.1] # SW priors
+    rho_u   : [.2703,.01,.9999,beta,0.7,0.1] # SW priors
+    sig_u : [0.1, 0.01, 5, inv_gamma, 0.1, .25] 
+    sig_a : [0.1, 0.01, 5, inv_gamma, 0.1, .25]
+    sig_r : [0.1, 0.01, 5, inv_gamma, 0.1, .25]
+
+    #trend : [0.3982,0.1,0.8,normal,0.41,0.025] # BS (2020) posterior
+    #mean_pi : [0.7,0.1,2.0,gamma,0.625,0.1] # SW priors
+    #mean_spread : [.5,.1,2.,normal,.5,.1] # SW priors
