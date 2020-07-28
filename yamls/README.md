@@ -10,6 +10,7 @@ This folder contains a collection of models that can be used with `pydsge`. The 
 * `tank.yaml`: the Smets-Wouters model with hand-to-mouth agents
 * `frank.yaml`: the Smets-Wouters model with BGG-type financial frictions
 * `ftank.yaml`: the Smets-Wouters model with hand-to-mouth agent and BGG-type financial frictions
+* `cfp_qe.yaml`: An adapted version of the model from Carlstrom, Fuerst & Paustian (2017) adapted for estimation with ZLB and QE. See Boehl, Goy & Strobel for details.
 * `nk.yaml`: the generic 3-equations benchmark NK model
 * `minimal_nk.yaml`: the most minimal version of the generic 3-equations benchmark NK model
 * `fnk.yaml`: a 3-equations benchmark NK model with financial frictions (model from Boehl & Lieberknecht: The Hockey Stick Phillips Curve and the Zero Lower Bound)
