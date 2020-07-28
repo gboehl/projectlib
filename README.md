@@ -1,17 +1,14 @@
 
-# Companion Codes
+# Project Codes
 
 The full papers can be found on my website: [gregorboehl.com](gregorboehl.com)
 
-This repo contains the codes for
+This repo contains the *.yaml* for several projects and non-projects (in the `yamls` folds) and the codes for
 
 1. mp_spec: Monetary Policy and Speculative Stock Markets 
+2. re_chaos: On the Evolutionary Fitness of Rationality
 
-The folders are each self-contained and the code is modified such that you can run it directly from within a folder that contains all the files, i.e. via command line: 
-
-E.g: `python coef.py`
-
-The simulation code is written in Python. Although I used Python version 3.7+ the code should be backwards compatible and also run under Python 2.7 (not tested). I did not test any of the code under Windows of Mac OS.
+The simulation code is written in Python. Although I used Python version 3.7+ the code should be backwards compatible and also run under Python 2.7 (not tested). I also didn't do any testing under Windows or Mac OS.
 
 ## mp_spec
 ### Codes for "Monetary Policy and Speculative Stock Markets"
