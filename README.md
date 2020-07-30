@@ -11,6 +11,12 @@ This repo contains:
 
 The simulation code is written in Python. Although I used Python version 3.7+ the code should be backwards compatible and also run under Python 2.7 (not tested). I also didn't do any testing under Windows or Mac OS.
 
+## `yamls`
+### A collection of model files for [pydsge](https://github.com/gboehl/pydsge)
+
+A description of the models is included in the README file in the folder.
+
+
 ## `mp_spec`
 ### Codes for "Monetary Policy and Speculative Asset Markets"
 
