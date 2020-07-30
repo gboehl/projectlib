@@ -49,7 +49,7 @@ class model(object):
 @njit(nogil=True, cache=True)
 def bh_func(pars, state, expect, args):
 
-    rational, noise = args
+    rational = args[0]
     dis, dlt, bet, gam, cos = pars
 
     xe = expect
@@ -82,9 +82,6 @@ def bh_func(pars, state, expect, args):
 
     x = (frac0*xe + (frac1+frac2)*gam*xm1 + (frac1-frac2)*bet)/dis
 
-    if noise:
-        x = x + numba_rand_norm(scale=1e-16, size=np.shape(x))
-
     if state.shape[1] < 3:
         ts = np.concatenate((
             x.reshape(x_shp+(1,)),
@@ -105,22 +102,24 @@ def bh_xfromv(v):
     return v[:, 0]
 
 
-def simulate_raw(t_func, T, transition_phase, initial_state):
+def simulate_raw(t_func, T, transition_phase, initial_state, noise):
 
     x = initial_state
+    res = np.empty((T,)+x.shape)
 
     for t in range(transition_phase):
         x = t_func(x)
 
-    res = np.empty((T,)+x.shape)
     for t in range(T):
+
         x = t_func(x)
+        x[0] += np.random.randn()*noise
         res[t] = x
 
     return res
 
 
-def simulate(t_func, T=None, transition_phase=0, initial_state=None, eps=None, numba_jit=True, show_warnings=True):
+def simulate(t_func, T=None, transition_phase=0, initial_state=None, eps=None, noise=False, numba_jit=True, show_warnings=True):
     """Generic simulation command
     """
 
@@ -138,9 +137,9 @@ def simulate(t_func, T=None, transition_phase=0, initial_state=None, eps=None, n
                 "Either `initial_state` or `ndim` must be given.")
 
     if numba_jit:
-        res = simulate_jit(t_func, T, transition_phase, initial_state)
+        res = simulate_jit(t_func, int(T), int(transition_phase), initial_state, noise)
     else:
-        res = simulate_raw(t_func, T, transition_phase, initial_state)
+        res = simulate_raw(t_func, int(T), int(transition_phase), initial_state, noise)
 
     return res
 
@@ -161,32 +160,33 @@ def pfi_t_func(pfunc, grid, numba_jit=True):
         return pfi_t_func_wrap
 
 
-def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, use_norm=True, initval=None, verbose=False):
+def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, init_pfunc, x0=None, verbose=False):
 
     ndim = len(grid)
     eps = 1e9
     it_cnt = 0
 
-    values = func(pars, gp, 0., args=args)[0]
+
+    xe = xfromv(eval_linear(grid, init_pfunc, init_pfunc.reshape(-1,ndim), xto.LINEAR))
+    values = func(pars, gp, xe, args=args)[0]
     svalues = values.reshape(grid_shape)
-    z_old = eval_linear(grid, svalues, initval, xto.LINEAR)[0]
+    z_old = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
 
     while eps > eps_max:
 
         it_cnt += 1
         values_old = values.copy()
+        values = svalues.reshape(-1,3)
         xe = xfromv(eval_linear(grid, svalues, values, xto.LINEAR))
         values = func(pars, gp, xe, args=args)[0]
         svalues = values.reshape(grid_shape)
 
-        if initval is not None:
-            z = eval_linear(grid, svalues, initval, xto.LINEAR)[0]
+        if x0 is not None:
+            z = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
             eps = np.abs(z-z_old)
             z_old = z
-        elif use_norm:
-            eps = np.linalg.norm(values - values_old)
         else:
-            eps = np.nanmax(np.abs(values - values_old))
+            eps = np.linalg.norm(values - values_old)
 
         if verbose:
             print(it_cnt, '- eps:', eps)
@@ -197,7 +197,7 @@ def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, use
     return values.reshape(grid_shape), it_cnt, eps
 
 
-def pfi(grid, model, eps_max=1e-8, it_max=100, numba_jit=True, **pfiargs):
+def pfi(grid, model, init_pfunc=None, eps_max=1e-8, it_max=100, numba_jit=True, **pfiargs):
     """Somewhat generic policy function iteration
 
     This assumes the form 
@@ -241,8 +241,14 @@ def pfi(grid, model, eps_max=1e-8, it_max=100, numba_jit=True, **pfiargs):
     grid_shape = tuple(g_spec[2] for g_spec in grid)
     grid_shape = grid_shape + (len(grid),)
 
+    if init_pfunc is None:
+        init_pfunc = np.zeros(grid_shape)
+
+    if init_pfunc.shape != grid_shape:
+        init_pfunc = init_pfunc.reshape(grid_shape)
+
     p_func, it_cnt, eps = pfi_func(
-        func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, **pfiargs)
+        func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, init_pfunc, **pfiargs)
     if np.isnan(p_func).any():
         flag += 1
     if np.isnan(p_func).all():
@@ -255,7 +261,7 @@ def pfi(grid, model, eps_max=1e-8, it_max=100, numba_jit=True, **pfiargs):
 
 bh_par_names = ['discount_factor', 'intensity_of_choice', 'bias', 'degree_trend_extrapolation', 'costs']
 bh_pars = np.array([1/.99, 1., 1., 0., 0.])
-bh_arg_names = ['rational', 'noise']
+bh_arg_names = ['rational']
 bh_args = np.array([0, 0])
 
 bh1998 = model(bh_func, bh_par_names, bh_pars, bh_arg_names, bh_args, bh_xfromv)
