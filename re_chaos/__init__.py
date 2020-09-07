@@ -50,7 +50,12 @@ class model(object):
 def bh_func(pars, state, expect, args):
 
     rational = args[0]
-    dis, dlt, bet, gam, cos = pars
+    dis, dlt, bet, gam, cos, gam2 = pars
+
+    type4 = gam2 != 123456789
+
+    if not type4:
+        gam2 = gam
 
     xe = expect
 
@@ -71,16 +76,17 @@ def bh_func(pars, state, expect, args):
 
     prof1 = (xm1 - dis*xm2) * (gam*xm3 + bet - dis*xm2)
 
-    if bet == 0:
+    if bet == 0 and not gam:
         prof2 = np.zeros_like(prof1)
     else:
-        prof2 = (xm1 - dis*xm2) * (gam*xm3 - bet - dis*xm2)
+        prof2 = (xm1 - dis*xm2) * (gam2*xm3 - bet - dis*xm2)
 
-    frac0 = 1/(1 + np.exp(dlt*(prof1-prof0)) + bool(bet) * np.exp(dlt*(prof2-prof0)))
-    frac1 = 1/(1 + np.exp(dlt*(prof0-prof1)) + bool(bet) * np.exp(dlt*(prof2-prof1)))
-    frac2 = bool(bet) / (1 + np.exp(dlt*(prof0-prof2)) + np.exp(dlt*(prof1-prof2)))
+    frac0 = 1/(1 + np.exp(dlt*(prof1-prof0)) + (bool(bet) | type4) * np.exp(dlt*(prof2-prof0)))
+    frac1 = 1/(1 + np.exp(dlt*(prof0-prof1)) + (bool(bet) | type4) * np.exp(dlt*(prof2-prof1)))
+    frac2 = (bool(bet) | type4) / (1 + np.exp(dlt*(prof0-prof2)) + np.exp(dlt*(prof1-prof2)))
 
-    x = (frac0*xe + (frac1+frac2)*gam*xm1 + (frac1-frac2)*bet)/dis
+    # x = (frac0*xe + (frac1+frac2)*gam*xm1 + (frac1-frac2)*bet)/dis
+    x = (frac0*xe + frac1*gam*xm1 + frac2*gam2*xm1 + (frac1-frac2)*bet)/dis
 
     if state.shape[1] < 3:
         ts = np.concatenate((
@@ -179,6 +185,8 @@ def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, ini
         values = svalues.reshape(-1,3)
         xe = xfromv(eval_linear(grid, svalues, values, xto.LINEAR))
         values = func(pars, gp, xe, args=args)[0]
+        # values = np.maximum(values, -1e4)
+        # values = np.minimum(values, 1e4)
         svalues = values.reshape(grid_shape)
 
         if x0 is not None:
@@ -259,8 +267,8 @@ def pfi(grid, model, init_pfunc=None, eps_max=1e-8, it_max=100, numba_jit=True, 
     return p_func, it_cnt, flag
 
 
-bh_par_names = ['discount_factor', 'intensity_of_choice', 'bias', 'degree_trend_extrapolation', 'costs']
-bh_pars = np.array([1/.99, 1., 1., 0., 0.])
+bh_par_names = ['discount_factor', 'intensity_of_choice', 'bias', 'degree_trend_extrapolation', 'costs', 'degree_trend_extrapolation_type2']
+bh_pars = np.array([1/.99, 1., 1., 0., 0., 123456789])
 bh_arg_names = ['rational']
 bh_args = np.array([0, 0])
 
