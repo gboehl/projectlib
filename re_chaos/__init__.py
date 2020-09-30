@@ -85,8 +85,7 @@ def bh_func(pars, state, expect, args):
     frac1 = 1/(1 + np.exp(dlt*(prof0-prof1)) + (bool(bet) | type4) * np.exp(dlt*(prof2-prof1)))
     frac2 = (bool(bet) | type4) / (1 + np.exp(dlt*(prof0-prof2)) + np.exp(dlt*(prof1-prof2)))
 
-    # x = (frac0*xe + (frac1+frac2)*gam*xm1 + (frac1-frac2)*bet)/dis
-    x = (frac0*xe + frac1*gam*xm1 + frac2*gam2*xm1 + (frac1-frac2)*bet)/dis
+    x = (frac0*xe + (frac1*gam + frac2*gam2)*xm1 + (frac1-frac2)*bet)/dis
 
     if state.shape[1] < 3:
         ts = np.concatenate((
