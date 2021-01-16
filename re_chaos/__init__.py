@@ -177,15 +177,15 @@ def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, ini
     svalues = values.reshape(grid_shape)
     z_old = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
 
-    while eps > eps_max:
+    while eps > eps_max or eps_max < 0:
 
         it_cnt += 1
         values_old = values.copy()
         values = svalues.reshape(-1,3)
         xe = xfromv(eval_linear(grid, svalues, values, xto.LINEAR))
         values = func(pars, gp, xe, args=args)[0]
-        # values = np.maximum(values, -1e4)
-        # values = np.minimum(values, 1e4)
+        # values = np.maximum(values, -1e2)
+        # values = np.minimum(values, 1e2)
         svalues = values.reshape(grid_shape)
 
         if x0 is not None:
@@ -249,7 +249,10 @@ def pfi(grid, model, init_pfunc=None, eps_max=1e-8, it_max=100, numba_jit=True, 
     grid_shape = grid_shape + (len(grid),)
 
     if init_pfunc is None:
-        init_pfunc = np.zeros(grid_shape)
+        init_pfunc = 0.
+
+    if isinstance(init_pfunc, (float,int)):
+        init_pfunc = np.ones(grid_shape)*init_pfunc
 
     if init_pfunc.shape != grid_shape:
         init_pfunc = init_pfunc.reshape(grid_shape)
