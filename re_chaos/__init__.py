@@ -165,7 +165,7 @@ def pfi_t_func(pfunc, grid, numba_jit=True):
         return pfi_t_func_wrap
 
 
-def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, init_pfunc, x0=None, verbose=False):
+def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, init_pfunc, x0=None, use_x0=True, verbose=False):
 
     ndim = len(grid)
     eps = 1e9
@@ -175,7 +175,9 @@ def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, ini
     xe = xfromv(eval_linear(grid, init_pfunc, init_pfunc.reshape(-1,ndim), xto.LINEAR))
     values = func(pars, gp, xe, args=args)[0]
     svalues = values.reshape(grid_shape)
-    z_old = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
+    
+    if use_x0:
+        z_old = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
 
     while eps > eps_max or eps_max < 0:
 
@@ -188,7 +190,7 @@ def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, ini
         # values = np.minimum(values, 1e2)
         svalues = values.reshape(grid_shape)
 
-        if x0 is not None:
+        if use_x0:
             z = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
             eps = np.abs(z-z_old)
             z_old = z
