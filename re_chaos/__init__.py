@@ -165,17 +165,18 @@ def pfi_t_func(pfunc, grid, numba_jit=True):
         return pfi_t_func_wrap
 
 
-def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, init_pfunc, x0=None, verbose=False):
+def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, init_pfunc, x0, use_x0=False, verbose=False):
 
     ndim = len(grid)
     eps = 1e9
     it_cnt = 0
 
-
     xe = xfromv(eval_linear(grid, init_pfunc, init_pfunc.reshape(-1,ndim), xto.LINEAR))
     values = func(pars, gp, xe, args=args)[0]
     svalues = values.reshape(grid_shape)
-    z_old = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
+
+    if use_x0:
+        z_old = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
 
     while eps > eps_max or eps_max < 0:
 
@@ -188,7 +189,7 @@ def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, ini
         # values = np.minimum(values, 1e2)
         svalues = values.reshape(grid_shape)
 
-        if x0 is not None:
+        if use_x0:
             z = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
             eps = np.abs(z-z_old)
             z_old = z
@@ -268,6 +269,59 @@ def pfi(grid, model, init_pfunc=None, eps_max=1e-8, it_max=100, numba_jit=True, 
 
     return p_func, it_cnt, flag
 
+@njit(cache=True)
+def race_njit(func, pars, args, x0, xss, n, neff, eps, max_iter):
+
+    x = np.ones(n)*xss
+    x[0:3] = x0[::-1]
+
+    cond = False
+    cnt = 1
+
+    while not cond:
+        x_old = x[:neff].copy()
+
+        for i in range(0,min(cnt,n-4)): 
+            y = np.ascontiguousarray(x[i:i+3][::-1])
+            x[3+i] = func(pars, y.reshape(1,-1), x[4+i], args)[0][0,0]
+
+        cond = np.max(np.abs(x_old - x[:neff])) < eps
+
+        if cnt == max_iter:
+            break
+
+        if np.any(np.isnan(x)):
+            break
+
+        cnt += 1
+
+    return x, cnt
+
+def race(mod, x0, xss=0, n=500, eps=1e-8, max_iter=5000, neff=None, verbose=True):
+
+    if neff is None:
+        neff = int(n*3/4)
+    x, cnt = race_njit(mod.func, mod.pars, mod.args, x0, xss, n, neff, eps, max_iter)
+
+    flag = 0
+    mess = ''
+
+    if cnt == max_iter:
+        flag += 1
+        mess += 'max_iter reached'
+
+    if np.any(np.isnan(x)):
+        flag += 2
+        mess += 'contains NaNs'
+
+    if np.any(np.isinf(x)):
+        flag += 4
+        mess += 'contains infs'
+
+    if verbose and mess:
+        print('race done. ', mess)
+
+    return x, (flag, cnt)
 
 bh_par_names = ['discount_factor', 'intensity_of_choice', 'bias', 'degree_trend_extrapolation', 'costs', 'degree_trend_extrapolation_type2']
 bh_pars = np.array([1/.99, 1., 1., 0., 0., 123456789])
