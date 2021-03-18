@@ -81,9 +81,12 @@ def bh_func(pars, state, expect, args):
     else:
         prof2 = (xm1 - dis*xm2) * (gam2*xm3 - bet - dis*xm2)
 
-    frac0 = 1/(1 + np.exp(dlt*(prof1-prof0)) + (bool(bet) | type4) * np.exp(dlt*(prof2-prof0)))
-    frac1 = 1/(1 + np.exp(dlt*(prof0-prof1)) + (bool(bet) | type4) * np.exp(dlt*(prof2-prof1)))
-    frac2 = (bool(bet) | type4) / (1 + np.exp(dlt*(prof0-prof2)) + np.exp(dlt*(prof1-prof2)))
+    frac0 = 1/(1 + np.exp(dlt*(prof1-prof0)) +
+               (bool(bet) | type4) * np.exp(dlt*(prof2-prof0)))
+    frac1 = 1/(1 + np.exp(dlt*(prof0-prof1)) +
+               (bool(bet) | type4) * np.exp(dlt*(prof2-prof1)))
+    frac2 = (bool(bet) | type4) / \
+        (1 + np.exp(dlt*(prof0-prof2)) + np.exp(dlt*(prof1-prof2)))
 
     x = (frac0*xe + (frac1*gam + frac2*gam2)*xm1 + (frac1-frac2)*bet)/dis
 
@@ -142,9 +145,11 @@ def simulate(t_func, T=None, transition_phase=0, initial_state=None, eps=None, n
                 "Either `initial_state` or `ndim` must be given.")
 
     if numba_jit:
-        res = simulate_jit(t_func, int(T), int(transition_phase), initial_state, noise)
+        res = simulate_jit(t_func, int(T), int(
+            transition_phase), initial_state, noise)
     else:
-        res = simulate_raw(t_func, int(T), int(transition_phase), initial_state, noise)
+        res = simulate_raw(t_func, int(T), int(
+            transition_phase), initial_state, noise)
 
     return res
 
@@ -171,11 +176,11 @@ def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, ini
     eps = 1e9
     it_cnt = 0
 
-
-    xe = xfromv(eval_linear(grid, init_pfunc, init_pfunc.reshape(-1,ndim), xto.LINEAR))
+    xe = xfromv(eval_linear(grid, init_pfunc,
+                            init_pfunc.reshape(-1, ndim), xto.LINEAR))
     values = func(pars, gp, xe, args=args)[0]
     svalues = values.reshape(grid_shape)
-    
+
     if use_x0:
         z_old = eval_linear(grid, svalues, x0, xto.LINEAR)[0]
 
@@ -183,7 +188,7 @@ def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, ini
 
         it_cnt += 1
         values_old = values.copy()
-        values = svalues.reshape(-1,3)
+        values = svalues.reshape(-1, 3)
         xe = xfromv(eval_linear(grid, svalues, values, xto.LINEAR))
         values = func(pars, gp, xe, args=args)[0]
         # values = np.maximum(values, -1e2)
@@ -253,7 +258,7 @@ def pfi(grid, model, init_pfunc=None, eps_max=1e-8, it_max=100, numba_jit=True, 
     if init_pfunc is None:
         init_pfunc = 0.
 
-    if isinstance(init_pfunc, (float,int)):
+    if isinstance(init_pfunc, (float, int)):
         init_pfunc = np.ones(grid_shape)*init_pfunc
 
     if init_pfunc.shape != grid_shape:
@@ -271,12 +276,71 @@ def pfi(grid, model, init_pfunc=None, eps_max=1e-8, it_max=100, numba_jit=True, 
     return p_func, it_cnt, flag
 
 
-bh_par_names = ['discount_factor', 'intensity_of_choice', 'bias', 'degree_trend_extrapolation', 'costs', 'degree_trend_extrapolation_type2']
+@njit(cache=True)
+def race_njit(func, pars, args, x0, xss, n, neff, eps, max_iter):
+
+    x = np.ones(n)*xss
+    x[0:3] = x0[::-1]
+
+    cond = False
+    cnt = 1
+
+    while not cond:
+        x_old = x[:neff].copy()
+
+        for i in range(0, min(cnt, n-4)):
+            y = np.ascontiguousarray(x[i:i+3][::-1])
+            x[3+i] = func(pars, y.reshape(1, -1), x[4+i], args)[0][0, 0]
+
+        cond = np.max(np.abs(x_old - x[:neff])) < eps
+
+        if cnt == max_iter:
+            break
+
+        if np.any(np.isnan(x)):
+            break
+
+        cnt += 1
+
+    return x, cnt
+
+
+def race(mod, x0, xss=0, n=500, eps=1e-8, max_iter=5000, neff=None, verbose=True):
+
+    if neff is None:
+        neff = int(n*3/4)
+    x, cnt = race_njit(mod.func, mod.pars, mod.args,
+                       x0, xss, n, neff, eps, max_iter)
+
+    flag = 0
+    mess = ''
+
+    if cnt == max_iter:
+        flag += 1
+        mess += 'max_iter reached'
+
+    if np.any(np.isnan(x)):
+        flag += 2
+        mess += 'contains NaNs'
+
+    if np.any(np.isinf(x)):
+        flag += 4
+        mess += 'contains infs'
+
+    if verbose and mess:
+        print('race done. ', mess)
+
+    return x, (flag, cnt)
+
+
+bh_par_names = ['discount_factor', 'intensity_of_choice', 'bias',
+                'degree_trend_extrapolation', 'costs', 'degree_trend_extrapolation_type2']
 bh_pars = np.array([1/.99, 1., 1., 0., 0., 123456789])
 bh_arg_names = ['rational']
 bh_args = np.array([0, 0])
 
-bh1998 = model(bh_func, bh_par_names, bh_pars, bh_arg_names, bh_args, bh_xfromv)
+bh1998 = model(bh_func, bh_par_names, bh_pars,
+               bh_arg_names, bh_args, bh_xfromv)
 
 simulate_jit = njit(simulate_raw, nogil=True, fastmath=True)
 pfi_jit = njit(pfi_raw, nogil=True, fastmath=True)
