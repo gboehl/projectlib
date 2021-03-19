@@ -300,7 +300,8 @@ def race_njit(func, pars, args, x0, xss, n, neff, eps, max_iter):
 def race(mod, x0, xss=0, n=500, eps=1e-8, max_iter=5000, neff=None, verbose=True):
 
     if neff is None:
-        neff = int(n*3/4)
+        neff = n
+
     x, cnt = race_njit(mod.func, mod.pars, mod.args, x0, xss, n, neff, eps, max_iter)
 
     flag = 0
