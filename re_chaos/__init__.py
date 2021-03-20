@@ -81,9 +81,12 @@ def bh_func(pars, state, expect, args):
     else:
         prof2 = (xm1 - dis*xm2) * (gam2*xm3 - bet - dis*xm2)
 
-    frac0 = 1/(1 + np.exp(dlt*(prof1-prof0)) + (bool(bet) | type4) * np.exp(dlt*(prof2-prof0)))
-    frac1 = 1/(1 + np.exp(dlt*(prof0-prof1)) + (bool(bet) | type4) * np.exp(dlt*(prof2-prof1)))
-    frac2 = (bool(bet) | type4) / (1 + np.exp(dlt*(prof0-prof2)) + np.exp(dlt*(prof1-prof2)))
+    frac0 = 1/(1 + np.exp(dlt*(prof1-prof0)) +
+               (bool(bet) | type4) * np.exp(dlt*(prof2-prof0)))
+    frac1 = 1/(1 + np.exp(dlt*(prof0-prof1)) +
+               (bool(bet) | type4) * np.exp(dlt*(prof2-prof1)))
+    frac2 = (bool(bet) | type4) / \
+        (1 + np.exp(dlt*(prof0-prof2)) + np.exp(dlt*(prof1-prof2)))
 
     x = (frac0*xe + (frac1*gam + frac2*gam2)*xm1 + (frac1-frac2)*bet)/dis
 
@@ -99,7 +102,8 @@ def bh_func(pars, state, expect, args):
             xm2.reshape(x_shp+(1,))),
             axis=1)
 
-    return ts, (frac0, frac1, frac2)
+    # return ts, (frac0, frac1, frac2)
+    return ts, np.vstack((frac0, frac1, frac2))
 
 
 @njit(nogil=True, cache=True)
@@ -142,9 +146,11 @@ def simulate(t_func, T=None, transition_phase=0, initial_state=None, eps=None, n
                 "Either `initial_state` or `ndim` must be given.")
 
     if numba_jit:
-        res = simulate_jit(t_func, int(T), int(transition_phase), initial_state, noise)
+        res = simulate_jit(t_func, int(T), int(
+            transition_phase), initial_state, noise)
     else:
-        res = simulate_raw(t_func, int(T), int(transition_phase), initial_state, noise)
+        res = simulate_raw(t_func, int(T), int(
+            transition_phase), initial_state, noise)
 
     return res
 
@@ -165,13 +171,14 @@ def pfi_t_func(pfunc, grid, numba_jit=True):
         return pfi_t_func_wrap
 
 
-def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, init_pfunc, x0, use_x0=False, verbose=False):
+def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, init_pfunc, x0=None, use_x0=True, verbose=False):
 
     ndim = len(grid)
     eps = 1e9
     it_cnt = 0
 
-    xe = xfromv(eval_linear(grid, init_pfunc, init_pfunc.reshape(-1,ndim), xto.LINEAR))
+    xe = xfromv(eval_linear(grid, init_pfunc,
+                            init_pfunc.reshape(-1, ndim), xto.LINEAR))
     values = func(pars, gp, xe, args=args)[0]
     svalues = values.reshape(grid_shape)
 
@@ -182,7 +189,7 @@ def pfi_raw(func, xfromv, pars, args, grid_shape, grid, gp, eps_max, it_max, ini
 
         it_cnt += 1
         values_old = values.copy()
-        values = svalues.reshape(-1,3)
+        values = svalues.reshape(-1, 3)
         xe = xfromv(eval_linear(grid, svalues, values, xto.LINEAR))
         values = func(pars, gp, xe, args=args)[0]
         # values = np.maximum(values, -1e2)
@@ -252,7 +259,7 @@ def pfi(grid, model, init_pfunc=None, eps_max=1e-8, it_max=100, numba_jit=True, 
     if init_pfunc is None:
         init_pfunc = 0.
 
-    if isinstance(init_pfunc, (float,int)):
+    if isinstance(init_pfunc, (float, int)):
         init_pfunc = np.ones(grid_shape)*init_pfunc
 
     if init_pfunc.shape != grid_shape:
@@ -269,6 +276,7 @@ def pfi(grid, model, init_pfunc=None, eps_max=1e-8, it_max=100, numba_jit=True, 
 
     return p_func, it_cnt, flag
 
+
 @njit(cache=True)
 def race_njit(func, pars, args, x0, xss, n, neff, eps, max_iter):
 
@@ -281,9 +289,9 @@ def race_njit(func, pars, args, x0, xss, n, neff, eps, max_iter):
     while not cond:
         x_old = x[:neff].copy()
 
-        for i in range(0,min(cnt,n-4)): 
+        for i in range(0, min(cnt+1, n-4)):
             y = np.ascontiguousarray(x[i:i+3][::-1])
-            x[3+i] = func(pars, y.reshape(1,-1), x[4+i], args)[0][0,0]
+            x[3+i] = func(pars, y.reshape(1, -1), x[4+i], args)[0][0, 0]
 
         cond = np.max(np.abs(x_old - x[:neff])) < eps
 
@@ -296,6 +304,7 @@ def race_njit(func, pars, args, x0, xss, n, neff, eps, max_iter):
         cnt += 1
 
     return x, cnt
+
 
 def race(mod, x0, xss=0, n=500, eps=1e-8, max_iter=5000, neff=None, verbose=True):
 
@@ -324,12 +333,104 @@ def race(mod, x0, xss=0, n=500, eps=1e-8, max_iter=5000, neff=None, verbose=True
 
     return x, (flag, cnt)
 
-bh_par_names = ['discount_factor', 'intensity_of_choice', 'bias', 'degree_trend_extrapolation', 'costs', 'degree_trend_extrapolation_type2']
+
+@njit(cache=True)
+def rocket_njit(func, pars, args, x0, xss, n, eps, max_iter, max_horizon):
+
+    x_fin = np.empty(n)
+    x_fin[0:3] = x0[::-1]
+
+    fracs = np.empty((n,3))
+
+    x = np.ones(max_horizon)*xss
+    x[0:3] = x0[::-1]
+
+    flag = np.zeros(3)
+
+    for i in range(n):
+
+        cond = False
+        cnt = 2
+
+        while True:
+
+            x_old = x[4]
+
+            for t in range(min(cnt,max_horizon-4)): 
+                X = np.ascontiguousarray(x[t:t+3][::-1])
+                x[3+t] = func(pars, X.reshape(1,-1), x[4+t], args)[0][0,0]
+
+            if np.abs(x_old - x[4]) < eps and cnt > 2:
+                break
+
+            if cnt == max_iter:
+                flag[0] = 1
+                break
+
+            if np.any(np.isnan(x)):
+                flag[1] = 1
+                break
+
+            if np.any(np.isinf(x)):
+                flag[2] = 1
+                break
+
+            cnt += 1
+
+        X = np.ascontiguousarray(x[0:3][::-1])
+        xt, frac = func(pars, X.reshape(1,-1), x[4], args)
+
+        x_fin[i] = xt[0,0]
+        fracs[i] = frac[:,0]
+
+        x = np.roll(x, -1)
+        x[-1] = xss
+
+    return x_fin, fracs, flag
+
+
+def rocket(mod, x0, xss=0, n=500, eps=1e-16, max_iter=None, max_horizon=1000, verbose=True):
+
+    if max_iter is None:
+        max_iter = max_horizon
+
+    x, fracs, flag = rocket_njit(mod.func, mod.pars, mod.args, x0, xss, n, eps, max_iter, max_horizon)
+
+    mess = ''
+
+    fin_flag = 0
+
+    if flag[0]:
+        fin_flag += 1
+        mess += 'max_iter reached'
+
+    if flag[1]:
+        fin_flag += 2
+        mess += 'contains NaNs'
+
+    if flag[2]:
+        fin_flag += 4
+        mess += 'contains infs'
+
+    if verbose and mess:
+        print('rocket done. ', mess)
+
+    return x, fracs, fin_flag
+
+def xstar(mod):
+
+    z = (2*np.arctan(1-2*(mod.pars[0]-1)/(mod.pars[3]-1))/mod.pars[1] + mod.pars[4])/(mod.pars[0]-1)/(mod.pars[3]-1)
+
+    return np.sqrt(max(0,z))
+
+bh_par_names = ['discount_factor', 'intensity_of_choice', 'bias',
+                'degree_trend_extrapolation', 'costs', 'degree_trend_extrapolation_type2']
 bh_pars = np.array([1/.99, 1., 1., 0., 0., 123456789])
 bh_arg_names = ['rational']
 bh_args = np.array([0, 0])
 
-bh1998 = model(bh_func, bh_par_names, bh_pars, bh_arg_names, bh_args, bh_xfromv)
+bh1998 = model(bh_func, bh_par_names, bh_pars,
+               bh_arg_names, bh_args, bh_xfromv)
 
 simulate_jit = njit(simulate_raw, nogil=True, fastmath=True)
 pfi_jit = njit(pfi_raw, nogil=True, fastmath=True)
