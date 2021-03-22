@@ -102,7 +102,6 @@ def bh_func(pars, state, expect, args):
             xm2.reshape(x_shp+(1,))),
             axis=1)
 
-    # return ts, (frac0, frac1, frac2)
     return ts, np.vstack((frac0, frac1, frac2))
 
 
@@ -311,7 +310,8 @@ def race(mod, x0, xss=0, n=500, eps=1e-8, max_iter=5000, neff=None, verbose=True
     if neff is None:
         neff = n
 
-    x, cnt = race_njit(mod.func, mod.pars, mod.args, x0, xss, n, neff, eps, max_iter)
+    x, cnt = race_njit(mod.func, mod.pars, mod.args,
+                       x0, xss, n, neff, eps, max_iter)
 
     flag = 0
     mess = ''
@@ -335,12 +335,12 @@ def race(mod, x0, xss=0, n=500, eps=1e-8, max_iter=5000, neff=None, verbose=True
 
 
 @njit(cache=True)
-def rocket_njit(func, pars, args, x0, xss, n, eps, max_iter, max_horizon):
+def rocket_njit(func, pars, args, x0, xss, n, eps, max_iter, max_horizon, forward):
 
     x_fin = np.empty(n)
     x_fin[0:3] = x0[::-1]
 
-    fracs = np.empty((n,3))
+    fracs = np.empty((n, 3))
 
     x = np.ones(max_horizon)*xss
     x[0:3] = x0[::-1]
@@ -350,15 +350,20 @@ def rocket_njit(func, pars, args, x0, xss, n, eps, max_iter, max_horizon):
     for i in range(n):
 
         cond = False
-        cnt = 2
+        cnt = 1 + forward
 
         while True:
 
             x_old = x[4]
 
-            for t in range(min(cnt,max_horizon-4)): 
+            imax = min(cnt, max_horizon-4)
+            for t in range(imax):
+
+                if not forward:
+                    t = imax - t - 1
+
                 X = np.ascontiguousarray(x[t:t+3][::-1])
-                x[3+t] = func(pars, X.reshape(1,-1), x[4+t], args)[0][0,0]
+                x[3+t] = func(pars, X.reshape(1, -1), x[4+t], args)[0][0, 0]
 
             if np.abs(x_old - x[4]) < eps and cnt > 2:
                 break
@@ -378,10 +383,10 @@ def rocket_njit(func, pars, args, x0, xss, n, eps, max_iter, max_horizon):
             cnt += 1
 
         X = np.ascontiguousarray(x[0:3][::-1])
-        xt, frac = func(pars, X.reshape(1,-1), x[4], args)
+        xt, frac = func(pars, X.reshape(1, -1), x[4], args)
 
-        x_fin[i] = xt[0,0]
-        fracs[i] = frac[:,0]
+        x_fin[i] = xt[0, 0]
+        fracs[i] = frac[:, 0]
 
         x = np.roll(x, -1)
         x[-1] = xss
@@ -389,12 +394,12 @@ def rocket_njit(func, pars, args, x0, xss, n, eps, max_iter, max_horizon):
     return x_fin, fracs, flag
 
 
-def rocket(mod, x0, xss=0, n=500, eps=1e-16, max_iter=None, max_horizon=1000, verbose=True):
+def rocket(mod, x0, xss=0, n=500, eps=1e-16, max_iter=None, max_horizon=1000, forward=True, verbose=True):
 
     if max_iter is None:
         max_iter = max_horizon
 
-    x, fracs, flag = rocket_njit(mod.func, mod.pars, mod.args, x0, xss, n, eps, max_iter, max_horizon)
+    x, fracs, flag = rocket_njit(mod.func, mod.pars, mod.args, x0, xss, n, eps, max_iter, max_horizon, forward)
 
     mess = ''
 
@@ -417,11 +422,14 @@ def rocket(mod, x0, xss=0, n=500, eps=1e-16, max_iter=None, max_horizon=1000, ve
 
     return x, fracs, fin_flag
 
+
 def xstar(mod):
 
-    z = (2*np.arctan(1-2*(mod.pars[0]-1)/(mod.pars[3]-1))/mod.pars[1] + mod.pars[4])/(mod.pars[0]-1)/(mod.pars[3]-1)
+    z = (2*np.arctan(1-2*(mod.pars[0]-1)/(mod.pars[3]-1)) /
+         mod.pars[1] + mod.pars[4])/(mod.pars[0]-1)/(mod.pars[3]-1)
 
-    return np.sqrt(max(0,z))
+    return np.sqrt(max(0, z))
+
 
 bh_par_names = ['discount_factor', 'intensity_of_choice', 'bias',
                 'degree_trend_extrapolation', 'costs', 'degree_trend_extrapolation_type2']
