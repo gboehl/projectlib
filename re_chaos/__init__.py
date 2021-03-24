@@ -337,10 +337,12 @@ def race(mod, x0, xss=0, n=500, eps=1e-8, max_iter=5000, neff=None, verbose=True
 @njit(cache=True)
 def rocket_njit(func, pars, args, x0, xss, n, eps, max_iter, max_horizon, forward):
 
-    x_fin = np.empty(n)
+    x_fin = np.empty(n+3)
     x_fin[0:3] = x0[::-1]
 
     fracs = np.empty((n, 3))
+    abs_errors = np.empty(n)
+    abs_errors[-1] = 0
 
     x = np.ones(max_horizon)*xss
     x[0:3] = x0[::-1]
@@ -385,13 +387,18 @@ def rocket_njit(func, pars, args, x0, xss, n, eps, max_iter, max_horizon, forwar
         X = np.ascontiguousarray(x[0:3][::-1])
         xt, frac = func(pars, X.reshape(1, -1), x[4], args)
 
-        x_fin[i] = xt[0, 0]
+        x_fin[i+3] = xt[0, 0]
         fracs[i] = frac[:, 0]
+
+        if i:
+            X0 = np.ascontiguousarray(x_fin[i-1:i+2][::-1])
+            x1 = func(pars, X0.reshape(1, -1), xt[0, 0], args)[0][0, 0]
+            abs_errors[i-1] = abs(x1 - x_fin[i+2])
 
         x = np.roll(x, -1)
         x[-1] = xss
 
-    return x_fin, fracs, flag
+    return x_fin[3:], fracs, flag, abs_errors
 
 
 def rocket(mod, x0, xss=0, n=500, eps=1e-16, max_iter=None, max_horizon=1000, forward=True, verbose=True):
@@ -399,7 +406,8 @@ def rocket(mod, x0, xss=0, n=500, eps=1e-16, max_iter=None, max_horizon=1000, fo
     if max_iter is None:
         max_iter = max_horizon
 
-    x, fracs, flag = rocket_njit(mod.func, mod.pars, mod.args, x0, xss, n, eps, max_iter, max_horizon, forward)
+    x, fracs, flag, abs_errors = rocket_njit(
+        mod.func, mod.pars, mod.args, x0, xss, n, eps, max_iter, max_horizon, forward)
 
     mess = ''
 
@@ -420,7 +428,7 @@ def rocket(mod, x0, xss=0, n=500, eps=1e-16, max_iter=None, max_horizon=1000, fo
     if verbose and mess:
         print('rocket done. ', mess)
 
-    return x, fracs, fin_flag
+    return x, fracs, fin_flag, abs_errors
 
 
 def xstar(mod):
