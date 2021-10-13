@@ -1,58 +1,52 @@
-# bgs_het.yaml ---
+# bgs_rnk.yaml ---
 #
-# Description: Model of Boehl, Goy & Strobel (A Structural Investigation on Quantitative Easing), baseline model
+# Description: Model of Boehl, Goy & Strobel (A Structural Investigation on Quantitative Easing) with neither borrowing-lending households nor hand-to-mouth agents (RANK version) with endogenous QE
 # Authors: Gregor Boehl [gboehl@uni-bonn.de], Gavin Goy [g.w.goy@dnb.nl] & Felix Strobel [felix.strobel@bundesbank.de]
 
 
 declarations:
-    name: 'bgs_het'
-    variables: [excessreturnkb, wh, dy, dc, di, dw, rd, mu, kh, bh, kb, bb, nu_n, rr, w, mc, cap, mpk, r, rn, keff, q, c, i, y, l, Pi, k, z, u, g, eps_p, eps_w, eps_r, eps_i, rk, eps_qe_b, eps_qe_b_GDP, eps_qe_k, eps_qe_k_GDP, rb, n, nn, nu_k, nu_b, b, omeg, qb,  excess_return_k, excess_return_b, lev, cbl, qe_all, wf, lf, keff_f, mpkf, capf, i_f, qf, rkf, yf, kf, cf, rrf, y_gap, lamb_k, qp, bpb, bpm, c_m, c_p, l_m, l_p, excess_return_p, rp, nu_p]
+    name: 'bgs_rnk'
+    variables: [excessreturnkb, wh, dy, dc, di, dw, rd, mu, kh, bh, kb, bb, nu_n, rr, w, mc, cap, mpk, r, rn, keff, q, c, c_h2m, c_r, i, y, l, l_h2m, l_r, Pi, k, z, u, g, eps_p, eps_w, eps_r, eps_i, rk, eps_qe_b, eps_qe_b_GDP, eps_qe_k, eps_qe_k_GDP, rb, n, nn, nu_k, nu_b, b, omeg, qb,  excess_return_k, excess_return_b, lev, cbl, qe_all, wf, lf, lf_h2m, lf_r, keff_f, mpkf, capf, i_f, qf, rkf, yf, kf, cf, cf_h2m, cf_r, rrf, y_gap, lamb_k]
     constrained: [r]
     shocks: [e_z, e_u, e_g, e_i, e_r, e_p, e_w, e_lk, e_qe_b, e_qe_k, e_cbl]
-    parameters: [mean_spread, mean_term_spread, pac, sig_l, mu_p, mu_w, rho_gz, L, tpr_beta, mean_Pi, mean_l, trend, mean_CBbonds_over_GDP, alpha, sig_c, Phi_p, phiss, h, zeta_w, i_w, zeta_p, i_p, psi, phi_pi, rho, phi_y, phi_dy, rho_z, rho_u, rho_g, rho_i, rho_r, rho_p, rho_w, sig_z, sig_u, sig_g, sig_i, sig_r, sig_p, sig_w, sig_qe_b, sig_qe_k, delta, lamb_w, G_Y, epsilon, kap_tau, theta, LEV, B_Y, mat_b, r_c, lamb_cbl, rho_cbl, sig_cbl, rho_lk, sig_lk, elb_level, rootb1, rootb2, rootk1, rootk2, lamda, mean_ppremium, mat_priv]
-    para_func: [MC, gamma, markup, beta, PI, betabar, RN, R, RB, RK, RCBL, MPK, W, k_1, I_K, L_K, K_Y, I_Y, C_Y, rkky, c_2, wly, conster, kappa, kappa_w, QB, KB_Y, KH_Y, BB_Y, BH_Y, N_Y, D_Y, N_O, N_N, omega, asset_growth, OM, NU_N, NU_B, NU_K, LAMB_K, LAMB_B, MU, x_bar, Y, C, N, B, K, KB, KH, BB, BH, NU_CBL, rho_qe_b1, rho_qe_k1, rho_qe_b2, rho_qe_k2, LAMB_P, LM, RP, BPM, NU_P, CM, QP, BPB_Y, BPM_Y, CP_Y, CM_Y, betam]
-    observables: [GDP, Cons, Inv, Lab, Infl, Wage, FFR, CBL, CB_Loans, CB_Bonds, GZSpread]
+    parameters: [mean_spread, mean_term_spread, pac, sig_l, mu_p, mu_w, rho_gz, L, tpr_beta, mean_Pi, mean_l, trend, alpha, sig_c, Phi_p, phiss, h, zeta_w, i_w, zeta_p, i_p, psi, phi_pi, rho, phi_y, phi_dy, rho_z, rho_u, rho_g, rho_i, rho_r, rho_p, rho_w, sig_z, sig_u, sig_g, sig_i, sig_r, sig_p, sig_w, sig_qe_b, sig_qe_k, delta, lamb_w, G_Y, epsilon, kap_tau, theta, LEV, B_Y, mat, r_c, lamb_cbl, lamda, rho_cbl, sig_cbl, rho_lk, sig_lk, elb_level, rootb1, rootb2, rootk1, rootk2, phi_sprd, phi_qeb, phi_qek]
+    para_func: [MC, gamma, lamb_p, beta, PI, betabar, RN, R, RB, RK, RCBL, MPK, W, k_1, I_K, L_K, K_Y, I_Y, C_Y, rkky, c_2, wly, conster, kappa, kappa_w, QB, KB_Y, KH_Y, BB_Y, BH_Y, N_Y, D_Y, N_O, N_N, omega, asset_growth, OM, NU_N, NU_B, NU_K, LAMB_K, lamb_b, MU, x_bar, Y, C, N, B, K, KB, KH, BB, BH, NU_CBL, rho_qe_b1, rho_qe_k1, rho_qe_b2, rho_qe_k2]
+    observables: [GDP, Cons, Inv, Lab, Infl, Wage, FFR, CBL, CB_Loans, CB_Bonds_10Y, GZSpread]
 
 equations:
   model:
     #1marginal cost
     - mc  = w - z + alpha*(l-keff)
     #2capital utilization
-    - mpk =  psi/(1-psi) * cap
+    - mpk =  psi/(1-psi)* cap
     #3marginal product of capital
     - mpk  =  w+l-keff
     #4effective capital
-    - keff   =  k(-1) + cap
+    - keff   =  k(-1)+cap
     #5investment euler
     - i   = (1/(1+betabar*gamma))* (  i(-1) + betabar*gamma*i(1)+(1/(gamma^2*phiss))*q ) +eps_i
     #6real return on capital
     - RK*rk = MC*MPK*(mc+y-keff) + (1-delta)*q - RK*q(-1)
-    #7.0consumption euler: patient
-    - c_p    = (h/gamma)/(1+h/gamma)*c_p(-1) + (1/(1+h/gamma))*c_p(+1) +((sig_c-1)*c_2/(sig_c*(1+h/gamma)))*(l_p-l_p(+1)) - (1-h/gamma)/(sig_c*(1+h/gamma))*(r-Pi(+1)+u)
-    #7.1labor supply: patient
-    - wh    = 1/(1-h/gamma)*(c_p-h/gamma*c_p(-1)) + sig_l*l_p
-    #7.0consumption euler: impatient
-    - c_m    = (h/gamma)/(1+h/gamma)*c_m(-1) + (1/(1+h/gamma))*c_m(+1) +((sig_c-1)*c_2/(sig_c*(1+h/gamma)))*(l_m-l_m(+1)) - (1-h/gamma)/(sig_c*(1+h/gamma))*(rp(+1))
-    #7.3labor supply: impatient
-    - wh    = 1/(1-h/gamma)*(c_m-h/gamma*c_m(-1)) + sig_l*l_m
-    #7.4budget impationet
-    - CM*c_m = QP*BPM*(qp+bpm) + W*LM*(w+l_m)  - RP*QP*BPM/gamma*(rp + qp(-1) + bpm(-1))
-    - RP*(rp+qp(-1)) = mat_priv*qp                                 
-    - c = lamda*c_m + (1-lamda)*c_p
-    - l = lamda*l_m + (1-lamda)*l_p
+    #7consumption euler
+    - c_r   = (h/gamma)/(1+h/gamma)*c_r(-1) + (1/(1+h/gamma))*c_r(1) +((sig_c-1)*c_2/(sig_c*(1+h/gamma)))*(l_r-l_r(1)) - (1-h/gamma)/(sig_c*(1+h/gamma))*(r-Pi(+1)+u)
+    - c_h2m = w + l_h2m
+    - wh    = 1/(1-h/gamma)*(c_r-h/gamma*c_r(-1)) + sig_l*l_r
+    - wh    = 1/(1-h/gamma)*(c_h2m-h/gamma*c_h2m(-1)) + sig_l*l_h2m
+    - l     = lamda*l_h2m+(1-lamda)*l_r 
+    - c     = lamda*c_h2m+(1-lamda)*c_r 
     # share of household in holdings of assets
     - pac*KH*kh = (RK/R)*(rk(+1)-rd)
     - pac*BH*bh = (RB/R)*(rb(+1)-rd)
     #8aggregate resource constraint
-    - y = C_Y*c + I_Y*i + g + rkky*cap
+    - y   = C_Y*c+I_Y*i+g  +  rkky*cap
     #9production fct.
-    - y = Phi_p*(alpha*keff + (1-alpha)*l + z)
+    - y     = Phi_p*(alpha*keff + (1-alpha)*l + z)
     #10NK Phillips Curve
-    - Pi = (1/(1+betabar*gamma*i_p)) * ( betabar*gamma*Pi(1) + i_p*Pi(-1) + kappa*mc ) + eps_p
+    - Pi  =  (1/(1+betabar*gamma*i_p)) * ( betabar*gamma*Pi(1) +i_p*Pi(-1)+kappa*mc  )  + eps_p
     #11Wage Phillips curve
-    - w = (1/(1+betabar*gamma))*w(-1)+(betabar*gamma/(1+betabar*gamma))*w(1)+(i_w/(1+betabar*gamma))*Pi(-1)-(1+betabar*gamma*i_w)/(1+betabar*gamma)*Pi+(betabar*gamma)/(1+betabar*gamma)*Pi(1)+ kappa_w*(wh-w) + eps_w
+    - w     = (1/(1+betabar*gamma))*w(-1)+(betabar*gamma/(1+betabar*gamma))*w(1)+(i_w/(1+betabar*gamma))*Pi(-1)-(1+betabar*gamma*i_w)/(1+betabar*gamma)*Pi+(betabar*gamma)/(1+betabar*gamma)*Pi(1)+ kappa_w*(wh-w) + eps_w
     #12capital accumulation
-    - k =  (1-k_1)*k(-1)+k_1*i + (1+betabar*gamma)*k_1*gamma^2*phiss*eps_i
+    - k  =  (1-k_1)*k(-1)+k_1*i + (1+betabar*gamma)*k_1*gamma^2*phiss*eps_i
     #13 Fisher eq.
     - rr = r - Pi(+1)
     - rd = rr + u
@@ -60,58 +54,59 @@ equations:
     #   Lagrange multiplier of incentive constraint (FOC 1) 
     - mu = LAMB_K/(LAMB_K-NU_K)*(nu_k-lamb_k)
     #16 arbitrage equation (FOC 2)
-    - nu_b = nu_k - lamb_k
-    - nu_p = nu_b
+    - nu_b = nu_k - lamb_k  
     #17 loan supply by bank (FOC 3)
-    - (LAMB_K-NU_K)*KB_Y*(q+kb) - KB_Y*nu_k*NU_K + KB_Y*LAMB_K*lamb_k = QB*BB_Y*((NU_B-LAMB_B)*(qb + bb) + nu_b*NU_B) + QP*BPB_Y*((NU_P-LAMB_P)*(qp + bpb) + nu_p*NU_P) + NU_N*N_Y*(nu_n +n) + (lamb_cbl+NU_CBL)*cbl
+    - (LAMB_K-NU_K)*KB_Y*(q+kb) - KB_Y*nu_k*NU_K + KB_Y*LAMB_K*lamb_k = QB*BB_Y*((NU_B-lamb_b)*(qb + bb) + nu_b*NU_B) + NU_N*N_Y*(nu_n +n) + (lamb_cbl+NU_CBL)*cbl
     #14 shadow value of holding capital assets
     - nu_k*NU_K = betabar*OM*((RK-R)*omeg(+1) + rk(+1)*RK - rd*R)                    
     #15 shadow value of holding government bonds  
-    - nu_b*NU_B = betabar*OM*((RB-R)*omeg(+1) + rb(+1)*RB - rd*R) 
-    #15 shadow value of holding private bonds  
-    - nu_p*NU_P = betabar*OM*((RP-R)*omeg(+1) + rp(+1)*RP - rd*R)                      
+    - nu_b*NU_B = betabar*OM*((RB-R)*omeg(+1) + rb(+1)*RB - rd*R)                    
     #15 shadow value of net worth  
     - nu_n = omeg(+1)+ rd
     #18 SDF of banker
     - omeg*OM = -rd(-1)*OM + theta*NU_N*((1+MU)*nu_n + MU*mu)
     #19 l.o.m. net worth
-    - n*N_Y = theta/gamma*(RK*KB_Y*rk +(RK-R)*KB_Y*(q(-1) + kb(-1)) + RB*QB*BB_Y*rb + (RB-R)*QB*BB_Y*(qb(-1) + bb(-1)) + RP*QP*BPB_Y*rp + (RP-R)*QP*BPB_Y*(qp(-1) + bpb(-1)) + (R-RCBL)/Y*cbl(-1) - R*D_Y*rd(-1)+ n(-1)*R*N_Y) + nn*N_N
+    - n*N_Y = theta/gamma*(RK*KB_Y*rk +(RK-R)*KB_Y*(q(-1) + kb(-1)) + RB*QB*BB_Y*rb + (RB-R)*QB*BB_Y*(qb(-1) + bb(-1)) + (R-RCBL)/Y*cbl(-1) - R*D_Y*rd(-1)+ n(-1)*R*N_Y) + nn*N_N
     #20 net worth of new bankers
-    - nn*N_N = omega/gamma*(KB_Y*(q(-1)+k(-1)) + QB*BB_Y*(qb(-1)+b(-1))+ QP*BPB_Y*(qp(-1)+bpb(-1)))
+    - nn*N_N = omega/gamma*(KB_Y*(q(-1)+k(-1)) + QB*BB_Y*(qb(-1)+b(-1)))
+    
     ## Fiscal equations
     #21 government budget constraint
     - RB*QB*B_Y/gamma*(rb+qb(-1)+b(-1)) + G_Y*g - kap_tau*b(-1)*B_Y/gamma = QB*B_Y*(qb+b)
     #22 return on long-term bonds
-    - RB*(rb+qb(-1)) = mat_b*qb                                 
-    # Capital, Government and Private Bond Market Clearing               
-    - k   = KH/K*kh + KB/K*kb + eps_qe_k
-    - b   = BH/B*bh + BB/B*bb + eps_qe_b
-    - bpb = bpm
-
+    - RB*(rb+qb(-1)) = mat*qb                                 
+    # Capital and Bond Market Clearing               
+    - k = KH/K*kh + KB/K*kb + eps_qe_k
+    - b = BH/B*bh + BB/B*bb + eps_qe_b
+    
     #############################################
     # friction-less eq.
     #############################################    
     #43 marginal cost
-    - z = wf + alpha*(lf-keff_f)
+    - z  = wf + alpha*(lf-keff_f)
     #44 capital utilization
-    - mpkf = psi/(1-psi)* capf
+    - mpkf =  psi/(1-psi)* capf
     #45 marginal product of capital
-    - mpkf = wf+lf-keff_f
+    - mpkf  =  wf+lf-keff_f
     #46 effective capital
-    - keff_f = kf(-1)+capf
+    - keff_f   =  kf(-1)+capf
     #47 investment euler
-    - i_f = (1/(1+betabar*gamma))*(i_f(-1) + betabar*gamma*i_f(1)+(1/(gamma^2*phiss))*qf ) +eps_i
+    - i_f   = (1/(1+betabar*gamma))* (  i_f(-1) + betabar*gamma*i_f(1)+(1/(gamma^2*phiss))*qf ) +eps_i
     #48 real return on capital
     - RK*rkf = MC*MPK*(yf-keff_f) + (1-delta)*qf - RK*qf(-1)
     #49 consumption and wages
-    - cf = (h/gamma)/(1+h/gamma)*cf(-1) + (1/(1+h/gamma))*cf(+1) +((sig_c-1)*c_2/(sig_c*(1+h/gamma)))*(lf-lf(1)) - (1-h/gamma)/(sig_c*(1+h/gamma))*(rrf+u)
-    - wf = 1/(1-h/gamma)*(cf-h/gamma*cf(-1)) + sig_l*lf
+    - cf_r   = (h/gamma)/(1+h/gamma)*cf_r(-1) + (1/(1+h/gamma))*cf_r(+1) +((sig_c-1)*c_2/(sig_c*(1+h/gamma)))*(lf_r-lf_r(1)) - (1-h/gamma)/(sig_c*(1+h/gamma))*(rrf+u) 
+    - cf_h2m = wf + lf_h2m
+    - wf    = 1/(1-h/gamma)*(cf_r-h/gamma*cf_r(-1)) + sig_l*lf_r
+    - wf    = 1/(1-h/gamma)*(cf_h2m-h/gamma*cf_h2m(-1)) + sig_l*lf_h2m
+    - lf     = lamda*lf_h2m+(1-lamda)*lf_r 
+    - cf     = lamda*cf_h2m+(1-lamda)*cf_r 
     #50 aggregate resource constraint
-    - yf = C_Y*cf+I_Y*i_f+g  +  rkky*capf
+    - yf   = C_Y*cf+I_Y*i_f+g  +  rkky*capf
     #51 production fct.
-    - yf =  Phi_p*(alpha*keff_f+(1-alpha)*lf +z)
+    - yf   =  Phi_p*(alpha*keff_f+(1-alpha)*lf +z)
     #53capital accumulation
-    - kf = (1-k_1)*kf(-1)+k_1*i_f + (1+betabar*gamma)*k_1*gamma^2*phiss*eps_i
+    - kf  =  (1-k_1)*kf(-1)+k_1*i_f + (1+betabar*gamma)*k_1*gamma^2*phiss*eps_i
     - rrf + u = rkf(+1)
     #63 output gap
     - y_gap = y-yf    
@@ -121,10 +116,9 @@ equations:
     ###############################
     # helpful definitions
     - excess_return_k = rk(+1)-rd # loan spread 
-    - excess_return_b = rb(+1)-rd # government bond spread
-    - excess_return_p = rp(+1)-rd # private bond spread
+    - excess_return_b = rb(+1)-rd # bond spread
     - excessreturnkb = rk(+1)-rb(+1)
-    - LEV*N_Y*(lev+n) = KB_Y*(q+kb) + QB*BB_Y*(qb+bb) + QP*BPB_Y*(qp+bpb) # Leverage
+    - LEV*N_Y*(lev+n) = KB_Y*(q+kb) + QB*BB_Y*(qb+bb) # Leverage
 
     # growth rates
     - dy = y - y(-1) 
@@ -141,17 +135,17 @@ equations:
     - eps_i        = rho_i*eps_i(-1) + e_i
     - u            = rho_u*u(-1) + e_u
     - lamb_k       = rho_lk*lamb_k(-1) + 10*e_lk
-    - eps_qe_b_GDP = rho_qe_b1*eps_qe_b_GDP(-1) + rho_qe_b2*eps_qe_b_GDP(-2) + e_qe_b # share of CB holdings of gov. bonds relative to all bonds
     - eps_qe_b_GDP = B_Y/4*eps_qe_b # share of CB holdings of gov. bonds relative to annualized GDP
-    - eps_qe_k_GDP = rho_qe_k1*eps_qe_k_GDP(-1) + rho_qe_k2*eps_qe_k_GDP(-2) + e_qe_k # share of CB holdings of gov. bonds relative to all bonds
-    - eps_qe_k_GDP = K_Y/4*eps_qe_k # share of CB holdings of gov. bonds relative to annualized GDP
+    - eps_qe_k_GDP = K_Y/4*eps_qe_k  # share of CB holdings of gov. bonds relative to annualized GDP
     - cbl          = rho_cbl*cbl(-1) + e_cbl # central bank liquidity injection
 
-    # aggregate qe
+    # aggregate QE
     - qe_all    = eps_qe_b_GDP + eps_qe_k_GDP + cbl
 
-    # MP rule
-    - rn     =  rho*rn(-1) + (1-rho)*(phi_pi*Pi + phi_y*y_gap + phi_dy*(y_gap-y_gap(-1))) + eps_r
+    # MP rules
+    - rn     =  rho*rn(-1) + (1-rho)*(phi_pi*Pi + phi_y*y_gap + phi_dy*(y_gap-y_gap(-1)) + phi_sprd*(rd-rk(+1))) + eps_r
+    - eps_qe_b_GDP = phi_qeb/(1-phi_qeb)*(1-rho_qe_b1-rho_qe_b2)*((r - rn) - rho*(r(-1) - rn(-1)))/(1-rho) + rho_qe_b1*eps_qe_b_GDP(-1) + rho_qe_b2*eps_qe_b_GDP(-2) + e_qe_b # share of CB holdings of gov. bonds relative to all bonds
+    - eps_qe_k_GDP = phi_qek/(1-phi_qek)*(1-rho_qe_k1-rho_qe_k2)*((r - rn) - rho*(r(-1) - rn(-1)))/(1-rho) + rho_qe_k1*eps_qe_k_GDP(-1) + rho_qe_k2*eps_qe_k_GDP(-2) + e_qe_k # share of CB holdings of gov. bonds relative to all bonds
 
   constraint:
     - r     =  rn
@@ -164,70 +158,59 @@ equations:
     Infl   : mean_Pi + Pi
     Wage   : trend + dw
     FFR    : (PI/((beta)*(gamma)^(-sig_c))-1)*100 + r
-    CB_Bonds  : mean_CBbonds_over_GDP + eps_qe_b_GDP
+    CB_Bonds_10Y  : 0 + eps_qe_b_GDP
     CBL       : 0 + cbl
     CB_Loans  : 0 + eps_qe_k_GDP
     GZSpread  : mean_spread + excessreturnkb
-    #BAASpread  : mean_spread + excessreturnkb
 
 calibration:
   parafunc:
     MC      : (epsilon-1)/epsilon
     gamma   : trend/100+1
-    markup  : Phi_p
+    lamb_p  : Phi_p
     beta    : 100/(tpr_beta+100)
     PI      : mean_Pi/100+1
     betabar : beta*gamma^(-sig_c)
     RN      : PI/(beta*gamma^(-sig_c))  # short-term nominal interest rate (policy rate)
     RCBL    : 1/PI                      # real rate on cbl, such that its nominal rate is zero
     R       : 1/(beta*gamma^(-sig_c))   # real rate on deposits
-    RB      : R + mean_term_spread/400  # real rate on long-term government bonds (0.5 annualized - motivated by 10Y-2Y Treasury spread)
-    RK      : RB + mean_spread/400      # real rate on capital assets/loans (motivated by AAA10T-spread and 10Y-2YTreasury spread)
-    RP      : RB + mean_ppremium/400    # real rate on private loans
-    betam   : beta*R/RP                 # discount factor impatient HHs    
+    RB      : R + mean_term_spread      # real rate on long-term government bonds (0.5 annualized - motivated by 10Y-2Y Treasury spread)
+    RK      : RB + mean_spread          # real rate on capital assets/loans (motivated by AAA10T-spread and 10Y-2YTreasury spread)
     MPK     : RK - (1-delta)
-    W       : (alpha^alpha*(1-alpha)^(1-alpha)/(markup*MPK^alpha))^(1/(1-alpha))
+    W       : (alpha^alpha*(1-alpha)^(1-alpha)/(lamb_p*MPK^alpha))^(1/(1-alpha))
     k_1     : (1-(1-delta)/gamma)
     I_K     : (1-(1-delta)/gamma)*gamma
     L_K     : (1-alpha)/alpha* MPK/W
-    LM      : lamda*L
     K_Y     : Phi_p*(L_K)^(alpha-1)
     I_Y     : I_K*K_Y
     C_Y     : 1-G_Y-I_K*K_Y
     rkky    : MPK*K_Y
-    Y       : (L_K*K_Y)^(-1)*L
-    CP_Y    : (1-lamda)*C_Y
-    CM_Y    : lamda*C_Y
-    CM      : CM_Y*Y
-    c_2     : (1/lamb_w)*(1-alpha)/alpha*MPK*K_Y/CP_Y
+    c_2     : (1/lamb_w)*(1-alpha)/alpha*MPK*K_Y/C_Y
     wly     : 1-MPK*K_Y
-    QP      : r_c/(RP-mat_priv)
-    BPB_Y   : (-W*LM+CM)/(Y*QP*(1-RP/gamma))
     conster : (RN-1)*100
-    kappa   : ((1-zeta_p)*(1-betabar*gamma*zeta_p)/zeta_p)/((markup-1)*epsilon+1)
+    kappa   : ((1-zeta_p)*(1-betabar*gamma*zeta_p)/zeta_p)/((lamb_p-1)*epsilon+1)
     kappa_w : (1-zeta_w)*(1-betabar*gamma*zeta_w)/((1+betabar*gamma)*zeta_w)*(1/((lamb_w-1)*epsilon+1))
-    QB      : r_c/(RB-mat_b) # stst. price of gov. bonds
+    QB      : r_c/(RB-mat) # stst. price of gov. bonds
     BH_Y    : B_Y*0.75
     BB_Y    : B_Y*0.25
     KH_Y    : K_Y*0.5
     KB_Y    : K_Y*0.5
-    N_Y     : (KB_Y + QB*BB_Y + QP*BPB_Y)/LEV # banks' net worth
-    D_Y     : (KB_Y+QB*BB_Y+ QP*BPB_Y)*(1-1/LEV) # banks' deposits  
-    N_O     : theta/gamma*(RK*KB_Y+RB*QB*BB_Y+QP*BPB_Y-R*D_Y) # net worth of old bankers
+    N_Y     : (KB_Y + QB*BB_Y)/LEV # banks' net worth
+    D_Y     : (KB_Y+QB*BB_Y)*(1-1/LEV) # banks' deposits  
+    N_O     : theta/gamma*(RK*KB_Y+RB*QB*BB_Y-R*D_Y) # net worth of old bankers
     N_N     : N_Y-N_O # net worth of new bankers
-    omega   : N_N/(KB_Y/gamma+QB*BB_Y/gamma +QP*BPB_Y/gamma) # parameter for initial net worth for new bankers
-    asset_growth : ((RK-R)*KB_Y+(RB-R)*QB*BB_Y+(RP-R)*QP*BPB_Y+R*N_Y)/N_Y*gamma # growth rate of assets of old bankers
+    omega   : N_N/(KB_Y/gamma+QB*BB_Y/gamma)                                           # parameter for initial net worth for new bankers
+    asset_growth : ((RK-R)*KB_Y+(RB-R)*QB*BB_Y+R*N_Y)/N_Y*gamma # growth rate of assets of old bankers
     OM      : (1-theta)/(1-betabar*theta*asset_growth) # SDF of bankers
     NU_N    : betabar*OM*R # shadow value of net worth
     NU_B    : betabar*OM*(RB-R) # shadow value of bond holdings
-    NU_K    : betabar*OM*(RK-R)
-    NU_P    : betabar*OM*(RP-R) # shadow value of capital holdings
-    LAMB_K  : (NU_K*KB_Y+NU_B*QB*BB_Y+NU_P*QP*BPB_Y+NU_N*N_Y)/(KB_Y+(RB-R)/(RK-R)*QB*BB_Y) # divertibility of capital assets
-    LAMB_B  : (RB-R)/(RK-R)*LAMB_K
-    LAMB_P  : (RP-R)/(RK-R)*LAMB_K # divertibility of gov. bonds
+    NU_K    : betabar*OM*(RK-R) # shadow value of capital holdings
+    LAMB_K  : (NU_K*KB_Y+NU_B*QB*BB_Y+NU_N*N_Y)/(KB_Y+(RB-R)/(RK-R)*QB*BB_Y) # divertibility of capital assets
+    lamb_b  : (RB-R)/(RK-R)*LAMB_K # divertibility of gov. bonds
     MU      : NU_K/(LAMB_K-NU_K) # Lagrange multiplier on banks' incentive constraint
     NU_CBL  : betabar*theta*rho_cbl*(MU*lamb_cbl+OM*R)/(1-betabar*theta*rho_cbl*(1+MU)) #shadow value of central bank liquidities 
     x_bar   :   -(PI/((beta)*(gamma)^(-(sig_c)))-1)*100 + elb_level
+    Y       : (L_K*K_Y)^(-1)*L
     C       : C_Y*Y
     N       : N_Y*Y
     B       : B_Y*Y
@@ -236,8 +219,6 @@ calibration:
     KB      : KB_Y*Y
     BH      : BH_Y*Y
     KH      : KH_Y*Y
-    BPM_Y   : BPB_Y
-    BPM     : BPM_Y*Y
     rho_qe_b1 : rootb1 + rootb2
     rho_qe_k1 : rootk1 + rootk2
     rho_qe_b2 : -rootb1*rootb2
@@ -249,30 +230,26 @@ calibration:
     lamb_w  : 1.1
     G_Y     : 0.18
     epsilon : 10
-    kap_tau  : 0.1 # feedback coefficient on debt in tax rule (Leeper(2017)- M_Regime)
+    kap_tau   : 0.1 # feedback coefficient on debt in tax rule (Leeper(2017)- M_Regime)
     theta   : 0.95
-    mat_b   : 0.975 # decay rate of consols (gov. bond, set to match 5 years average duration)
-    mat_priv: 0.975 # 10-year  
+    mat   : 0.975 # decay rate of consols (gov. bond, set to match 5 years average duration)
     r_c     : 0.04 # coupon on consols (gov.bonds)
     lamb_cbl: 2
     elb_level: .05
     B_Y     : 3.152    # public debt-to-GDP ratio: 1998Q1-2007Q4
-    mean_CBbonds_over_GDP : 5.5 # pre-2007 value
 
     ## Some means later to be estimated
-
     LEV:           2.00     # average leverage 1998Q1 - 2007Q4
     mean_spread:       0.5739   # GZspread average: 1998Q1-2007Q4 
     mean_term_spread:  0.1975   # 10y-2y Treasury spread: average: 1998Q1-2007Q4
-    mean_ppremium:     0.1      # Premium of 30-y fixed rate mortgages over 30Y treasury
     trend:             0.4123   # represents the trend dY from 1998Q1 to 2007Q4
     mean_l:            0        # demeaned pre-estimation
     mean_Pi:           0.5475   # average for 1998.Q1 - 2007Q4
 
     ## Parameters to be estimated
-    lamda   : 0.3 # households with binding borrowing constraint
-    pac     : 1 # hhs portfolio adjustment costs (calibration by GK=1)
-    L       : 0.33 
+    lamda: 0.0
+    pac: 1  # hhs portfolio adjustment costs (calibration by GK=1)
+    L:     0.33
     tpr_beta: 0.25
     alpha   : 0.1901
     sig_c   : 1.5
@@ -288,6 +265,9 @@ calibration:
     phi_pi  : 1.7
     phi_y   : 0.125
     phi_dy  : 0.125
+    phi_sprd  : 0.
+    phi_qeb : 0.01
+    phi_qek : 0.01
 
     rho     : 0.8
     rho_z   : 0.7
@@ -297,14 +277,16 @@ calibration:
     rho_r   : 0.5
     rho_p   : 0.7
     rho_w   : 0.7
-    rho_lk  : 0.9 #for low values: supply shock; for high values demand shock (for high values: y,i,pi fall, c briefly increases before falling)
+    rho_lk  : 0.9  #for low values: supply shock; for high values demand shock (for high values: y,i,pi fall, c briefly increases before falling)
     rho_cbl  : 0.5
-    rootb1  : 0.7
-    rootb2  : 0.7
-    rootk1  : 0.7
-    rootk2  : 0.7
+    rootb1  : 0.95
+    #rootb2  : 0.55
+    rootb2  : 0
+    rootk1  : 0.95
+    #rootk2  : 0.55
+    rootk2  : 0
 
-    mu_w    : 0.01
+    mu_w    : 0.00
     mu_p    : 0.01
     rho_gz  : 0.01
 
@@ -355,6 +337,9 @@ estimation:
     phi_pi  : [1.7985,1.0,2.5,normal,1.5,0.25]
     phi_y   : [0.0893,0.001,0.6,normal,0.125,0.05]
     phi_dy  : [0.2239,0.001,0.6,normal,0.125,0.05]
+    phi_sprd: [None,-0.2,0.6,normal,0.125,0.05]
+    phi_qeb : [None,0.3,0.999,beta,0.9,0.05]
+    phi_qek : [None,0.3,0.999,beta,0.9,0.05]
     rho     : [0.8258,0.5,0.975,beta,0.75,0.10]
 
     rho_r   : [.3,.01,.9999,beta,0.5,0.20]
@@ -364,18 +349,18 @@ estimation:
     rho_p   : [.8692,.01,.9999,beta,0.5,0.20]
     rho_w   : [.9546,.001,.9999,beta,0.5,0.20]
     rho_u   : [.2703,.01,.9999,beta,0.5,0.20]
-    rho_lk    : [0.7, 0.01,.9999,beta, 0.5, 0.2] 
+    rho_lk    : [0.7, 0.01,.9999,beta, 0.5, 0.2]
 
-    rho_cbl : [0.7, 0.01,.9999,beta, 0.5, 0.2] 
+    rho_cbl : [0.7, 0.01,.9999,beta, 0.5, 0.2]
     rootb1  : [0.55, 0.001, 0.9999, beta, 0.5, 0.2 ]
-    rootb2  : [0.55, 0.001, 0.9999, beta, 0.5, 0.2 ]
+    #rootb2  : [0.55, 0.001, 0.9999, beta, 0.5, 0.2 ]
     rootk1  : [0.55, 0.001, 0.9999, beta, 0.5, 0.2 ]
-    rootk2  : [0.55, 0.001, 0.9999, beta, 0.5, 0.2 ]
+    #rootk2  : [0.55, 0.001, 0.9999, beta, 0.5, 0.2 ]
     mu_p    : [.7652,0.01,.9999,beta,0.5,0.2]
     mu_w    : [.8936,0.01,.9999,beta,0.5,0.2]
     rho_gz  : [0.05,0.01,2.0,normal,0.5,0.25]
 
-    ## representing the inv_gamma in terms of (mean, std)
+    ## representing inv_gamma in terms of (mean, std)
     sig_g    : [0.6090,0.01,3,inv_gamma,0.1,.25]
     sig_z    : [0.4618,0.01,3,inv_gamma,0.1,.25]
     sig_r    : [0.2397,0.01,3,inv_gamma,0.1,.25]
@@ -383,21 +368,20 @@ estimation:
     sig_p    : [0.1455,0.01,3,inv_gamma,0.1,.25]
     sig_w    : [0.2089,0.01,3,inv_gamma,0.1,.25]
     sig_u    : [0.1 ,0.025,5,inv_gamma,0.1,.25]
-    sig_lk   : [0.6090,0.01,5,inv_gamma,0.1,.25] 
-    sig_cbl  : [0.1, 0.01, 5, inv_gamma, 0.1, .25] 
-    sig_qe_b : [0.1, 0.01, 5, inv_gamma, 0.1, .25] 
-    sig_qe_k : [0.1, 0.01, 5, inv_gamma, 0.1, .25] 
+    sig_lk   : [0.6090,0.01,5,inv_gamma,0.1,.25]
+    sig_cbl  : [0.1, 0.01, 5, inv_gamma, 0.1, .25]
+    sig_qe_b : [0.1, 0.01, 5, inv_gamma, 0.1, .25]
+    sig_qe_k : [0.1, 0.01, 5, inv_gamma, 0.1, .25]
 
-    kap_tau : [0.240,0.01,1.0,gamma, 0.3, 0.1] 
-    pac     : [2, 0.2, 5, gamma, 2, 4] 
-    LEV : [5, 1.5, 8, normal, 3, 1.] 
-    theta   : [0.855,0.001,0.9999,beta, 0.95, 0.05] 
-    lamb_cbl: [3.00, 0.001, 10, gamma, 3, 3] 
-    lamda    : [0.4,0.01,.9999,beta, 0.3, 0.1] 
+    kap_tau : [0.240,0.01,1.0,gamma, 0.3, 0.1]
+    pac     : [2, 0.2, 5, gamma, 2, 4]
+    LEV : [5, 1.5, 8, normal, 3, 1.]
+    theta   : [0.855,0.001,0.9999,beta, 0.95, 0.05]
+    lamb_cbl: [3.00, 0.001, 10, gamma, 3, 3]
 
     mean_term_spread :  [0.1975, 0.01, 2.0, gamma, 0.5, .1]
-    mean_ppremium    :  [0.10, 0.01, 1.0, gamma, 0.1, .03]
     mean_spread      : [.5,.1,2.,normal,.5,.1]
     trend            : [0.3982,0.1,0.8,normal,0.44,0.05] # Kulish et al. (2017)
     mean_Pi          : [0.7,0.1,2.0,gamma,0.625,0.1]
-    mean_l           : [4.2918,-6.0,14.0,normal,0.0,2.0]
+    mean_l           : [4.2918,-4.0,4.0,normal,0.0,2.0]
+

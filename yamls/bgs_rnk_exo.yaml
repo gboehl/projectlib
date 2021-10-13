@@ -1,30 +1,30 @@
-# bgs_h2m.yaml ---
+# bgs_rnk.yaml ---
 #
-# Description: Model of Boehl, Goy & Strobel (A Structural Investigation on Quantitative Easing) with hand-to-mouth agents
+# Description: Model of Boehl, Goy & Strobel (A Structural Investigation on Quantitative Easing) with neither borrowing-lending households nor hand-to-mouth agents (RANK version) and exogenous QE
 # Authors: Gregor Boehl [gboehl@uni-bonn.de], Gavin Goy [g.w.goy@dnb.nl] & Felix Strobel [felix.strobel@bundesbank.de]
 
 
 declarations:
-    name: 'bgs_h2m'
+    name: 'bgs_rnk'
     variables: [excessreturnkb, wh, dy, dc, di, dw, rd, mu, kh, bh, kb, bb, nu_n, rr, w, mc, cap, mpk, r, rn, keff, q, c, c_h2m, c_r, i, y, l, l_h2m, l_r, Pi, k, z, u, g, eps_p, eps_w, eps_r, eps_i, rk, eps_qe_b, eps_qe_b_GDP, eps_qe_k, eps_qe_k_GDP, rb, n, nn, nu_k, nu_b, b, omeg, qb,  excess_return_k, excess_return_b, lev, cbl, qe_all, wf, lf, lf_h2m, lf_r, keff_f, mpkf, capf, i_f, qf, rkf, yf, kf, cf, cf_h2m, cf_r, rrf, y_gap, lamb_k]
     constrained: [r]
     shocks: [e_z, e_u, e_g, e_i, e_r, e_p, e_w, e_lk, e_qe_b, e_qe_k, e_cbl]
-    parameters: [mean_spread, mean_term_spread, pac, sig_l, mu_p, mu_w, rho_gz, L, tpr_beta, mean_Pi, mean_l, trend, mean_CBbonds_over_GDP, alpha, sig_c, Phi_p, phiss, h, zeta_w, i_w, zeta_p, i_p, psi, phi_pi, rho, phi_y, phi_dy, rho_z, rho_u, rho_g, rho_i, rho_r, rho_p, rho_w, sig_z, sig_u, sig_g, sig_i, sig_r, sig_p, sig_w, sig_qe_b, sig_qe_k, delta, lamb_w, G_Y, epsilon, kap_tau, theta, LEV, B_Y, mat, r_c, lamb_cbl, lamda, rho_cbl, sig_cbl, rho_lk, sig_lk, elb_level, rootb1, rootb2, rootk1, rootk2]
+    parameters: [mean_spread, mean_term_spread, pac, sig_l, mu_p, mu_w, rho_gz, L, tpr_beta, mean_Pi, mean_l, trend, alpha, sig_c, Phi_p, phiss, h, zeta_w, i_w, zeta_p, i_p, psi, phi_pi, rho, phi_y, phi_dy, rho_z, rho_u, rho_g, rho_i, rho_r, rho_p, rho_w, sig_z, sig_u, sig_g, sig_i, sig_r, sig_p, sig_w, sig_qe_b, sig_qe_k, delta, lamb_w, G_Y, epsilon, kap_tau, theta, LEV, B_Y, mat, r_c, lamb_cbl, lamda, rho_cbl, sig_cbl, rho_lk, sig_lk, elb_level, rootb1, rootb2, rootk1, rootk2, phi_sprd, phi_qeb, phi_qek]
     para_func: [MC, gamma, lamb_p, beta, PI, betabar, RN, R, RB, RK, RCBL, MPK, W, k_1, I_K, L_K, K_Y, I_Y, C_Y, rkky, c_2, wly, conster, kappa, kappa_w, QB, KB_Y, KH_Y, BB_Y, BH_Y, N_Y, D_Y, N_O, N_N, omega, asset_growth, OM, NU_N, NU_B, NU_K, LAMB_K, lamb_b, MU, x_bar, Y, C, N, B, K, KB, KH, BB, BH, NU_CBL, rho_qe_b1, rho_qe_k1, rho_qe_b2, rho_qe_k2]
-    observables: [GDP, Cons, Inv, Lab, Infl, Wage, FFR, CBL, CB_Loans, CB_Bonds, GZSpread]
+    observables: [GDP, Cons, Inv, Lab, Infl, Wage, FFR, CBL, CB_Loans, CB_Bonds_10Y, GZSpread]
 
 equations:
   model:
-     #1marginal cost
+    #1marginal cost
     - mc  = w - z + alpha*(l-keff)
     #2capital utilization
-    - mpk =  psi/(1-psi)* cap
+    - mpk =  psi/(1-psi)*cap
     #3marginal product of capital
-    - mpk  =  w+l-keff
+    - mpk = w+l-keff
     #4effective capital
-    - keff   =  k(-1)+cap
+    - keff = k(-1) + cap
     #5investment euler
-    - i   = (1/(1+betabar*gamma))* (  i(-1) + betabar*gamma*i(1)+(1/(gamma^2*phiss))*q ) +eps_i
+    - i = (1/(1+betabar*gamma)) * ( i(-1) + betabar*gamma*i(1)+(1/(gamma^2*phiss))*q ) + eps_i
     #6real return on capital
     - RK*rk = MC*MPK*(mc+y-keff) + (1-delta)*q - RK*q(-1)
     #7consumption euler
@@ -34,7 +34,7 @@ equations:
     - wh    = 1/(1-h/gamma)*(c_h2m-h/gamma*c_h2m(-1)) + sig_l*l_h2m
     - l     = lamda*l_h2m+(1-lamda)*l_r 
     - c     = lamda*c_h2m+(1-lamda)*c_r 
-    #share of household in holdings of assets
+    # share of household in holdings of assets
     - pac*KH*kh = (RK/R)*(rk(+1)-rd)
     - pac*BH*bh = (RB/R)*(rb(+1)-rd)
     #8aggregate resource constraint
@@ -51,7 +51,7 @@ equations:
     - rr = r - Pi(+1)
     - rd = rr + u
     ## Banks
-    #Lagrange multiplier of incentive constraint (FOC 1) 
+    #   Lagrange multiplier of incentive constraint (FOC 1) 
     - mu = LAMB_K/(LAMB_K-NU_K)*(nu_k-lamb_k)
     #16 arbitrage equation (FOC 2)
     - nu_b = nu_k - lamb_k  
@@ -61,7 +61,7 @@ equations:
     - nu_k*NU_K = betabar*OM*((RK-R)*omeg(+1) + rk(+1)*RK - rd*R)                    
     #15 shadow value of holding government bonds  
     - nu_b*NU_B = betabar*OM*((RB-R)*omeg(+1) + rb(+1)*RB - rd*R)                    
-    #shadow value of net worth  
+    #15 shadow value of net worth  
     - nu_n = omeg(+1)+ rd
     #18 SDF of banker
     - omeg*OM = -rd(-1)*OM + theta*NU_N*((1+MU)*nu_n + MU*mu)
@@ -75,7 +75,7 @@ equations:
     - RB*QB*B_Y/gamma*(rb+qb(-1)+b(-1)) + G_Y*g - kap_tau*b(-1)*B_Y/gamma = QB*B_Y*(qb+b)
     #22 return on long-term bonds
     - RB*(rb+qb(-1)) = mat*qb                                 
-    #Capital and Bond Market Clearing               
+    # Capital and Bond Market Clearing               
     - k = KH/K*kh + KB/K*kb + eps_qe_k
     - b = BH/B*bh + BB/B*bb + eps_qe_b
     
@@ -112,7 +112,7 @@ equations:
     - y_gap = y-yf    
 
     ###############################
-    ## shocks and further equations
+    # shocks and further equations
     ###############################
     # helpful definitions
     - excess_return_k = rk(+1)-rd # loan spread 
@@ -135,23 +135,17 @@ equations:
     - eps_i        = rho_i*eps_i(-1) + e_i
     - u            = rho_u*u(-1) + e_u
     - lamb_k       = rho_lk*lamb_k(-1) + 10*e_lk
-    #- lamb_k       = 0
-    # share of CB holdings of gov. bonds relative to all bonds
-    - eps_qe_b_GDP = rho_qe_b1*eps_qe_b_GDP(-1) + rho_qe_b2*eps_qe_b_GDP(-2) + e_qe_b 
-    - eps_qe_b_GDP = B_Y/4*eps_qe_b 
-    # share of CB holdings of gov. bonds relative to annualized GDP
-    - eps_qe_k_GDP = rho_qe_k1*eps_qe_k_GDP(-1) + rho_qe_k2*eps_qe_k_GDP(-2) + e_qe_k 
-    # share of CB holdings of gov. bonds relative to all bonds
-    - eps_qe_k_GDP = K_Y/4*eps_qe_k  
-    # share of CB holdings of gov. bonds relative to annualized GDP
-    - cbl          = rho_cbl*cbl(-1) + e_cbl 
-    # central bank liquidity injection
+    - eps_qe_b_GDP = QB*B_Y/4*eps_qe_b # share of CB holdings of gov. bonds relative to annualized GDP
+    - eps_qe_k_GDP = K_Y/4*eps_qe_k  # share of CB holdings of gov. bonds relative to annualized GDP
+    - cbl          = rho_cbl*cbl(-1) + e_cbl # central bank liquidity injection
 
-    # useful qe aggregate
+    # aggregate QE
     - qe_all    = eps_qe_b_GDP + eps_qe_k_GDP + cbl
 
-    # MP rule
-    - rn     =  rho*rn(-1) + (1-rho)*(phi_pi*Pi + phi_y*y_gap + phi_dy*(y_gap-y_gap(-1))) + eps_r
+    # MP rules
+    - rn     =  rho*rn(-1) + (1-rho)*(phi_pi*Pi + phi_y*y_gap + phi_dy*(y_gap-y_gap(-1)) + phi_sprd*(rd-rk(+1))) + eps_r
+    - eps_qe_b_GDP = phi_qeb/(1-phi_qeb)*(1-rho_qe_b1-rho_qe_b2)*((r - rn) - rho*(r(-1) - rn(-1)))/(1-rho) + rho_qe_b1*eps_qe_b_GDP(-1) + rho_qe_b2*eps_qe_b_GDP(-2) + e_qe_b # share of CB holdings of gov. bonds relative to all bonds
+    - eps_qe_k_GDP = phi_qek/(1-phi_qek)*(1-rho_qe_k1-rho_qe_k2)*((r - rn) - rho*(r(-1) - rn(-1)))/(1-rho) + rho_qe_k1*eps_qe_k_GDP(-1) + rho_qe_k2*eps_qe_k_GDP(-2) + e_qe_k # share of CB holdings of gov. bonds relative to all bonds
 
   constraint:
     - r     =  rn
@@ -164,7 +158,7 @@ equations:
     Infl   : mean_Pi + Pi
     Wage   : trend + dw
     FFR    : (PI/((beta)*(gamma)^(-sig_c))-1)*100 + r
-    CB_Bonds  : mean_CBbonds_over_GDP + eps_qe_b_GDP
+    CB_Bonds_10Y  : 0 + eps_qe_b_GDP
     CBL       : 0 + cbl
     CB_Loans  : 0 + eps_qe_k_GDP
     GZSpread  : mean_spread + excessreturnkb
@@ -180,8 +174,8 @@ calibration:
     RN      : PI/(beta*gamma^(-sig_c))  # short-term nominal interest rate (policy rate)
     RCBL    : 1/PI                      # real rate on cbl, such that its nominal rate is zero
     R       : 1/(beta*gamma^(-sig_c))   # real rate on deposits
-    RB      : R + mean_term_spread/400  # real rate on long-term government bonds (0.5 annualized - motivated by 10Y-2Y Treasury spread)
-    RK      : RB + mean_spread/400      # real rate on capital assets/loans (motivated by AAA10T-spread and 10Y-2YTreasury spread)
+    RB      : R + mean_term_spread  # real rate on long-term government bonds (0.5 annualized - motivated by 10Y-2Y Treasury spread)
+    RK      : RB + mean_spread      # real rate on capital assets/loans (motivated by AAA10T-spread and 10Y-2YTreasury spread)
     MPK     : RK - (1-delta)
     W       : (alpha^alpha*(1-alpha)^(1-alpha)/(lamb_p*MPK^alpha))^(1/(1-alpha))
     k_1     : (1-(1-delta)/gamma)
@@ -238,16 +232,13 @@ calibration:
     epsilon : 10
     kap_tau   : 0.1 # feedback coefficient on debt in tax rule (Leeper(2017)- M_Regime)
     theta   : 0.95
-    mat     : 0.975 # decay rate of consols (gov. bond, set to match 5 years average duration)
+    mat   : 0.975 # decay rate of consols (gov. bond, set to match 5 years average duration)
     r_c     : 0.04 # coupon on consols (gov.bonds)
     lamb_cbl: 2
     elb_level: .05
-    #B_Y     : 1.96     # public debt-to-GDP ratio: 1973Q1-2007Q4
-    #B_Y     : 2.432    # public debt-to-GDP ratio: 1973Q1-2019Q3
     B_Y     : 3.152    # public debt-to-GDP ratio: 1998Q1-2007Q4
-    #mean_CBbonds_over_GDP : 3.15   # average for 1998Q1 - 2007Q4
-    mean_CBbonds_over_GDP : 5.5 # pre-2007 value
 
+    ## Some means later to be estimated
     LEV:           2.00     # average leverage 1998Q1 - 2007Q4
     mean_spread:       0.5739   # GZspread average: 1998Q1-2007Q4 
     mean_term_spread:  0.1975   # 10y-2y Treasury spread: average: 1998Q1-2007Q4
@@ -256,7 +247,7 @@ calibration:
     mean_Pi:           0.5475   # average for 1998.Q1 - 2007Q4
 
     ## Parameters to be estimated
-    lamda: 0.3
+    lamda: 0.0
     pac: 1  # hhs portfolio adjustment costs (calibration by GK=1)
     L:     0.33
     tpr_beta: 0.25
@@ -274,6 +265,9 @@ calibration:
     phi_pi  : 1.7
     phi_y   : 0.125
     phi_dy  : 0.125
+    phi_sprd  : 0.
+    phi_qeb : 0.
+    phi_qek : 0.
 
     rho     : 0.8
     rho_z   : 0.7
@@ -290,7 +284,8 @@ calibration:
     rootk1  : 0.95
     rootk2  : 0.55
 
-    mu_w    : 0.00
+#    mu_w    : 0.00
+    mu_w    : 0.01
     mu_p    : 0.01
     rho_gz  : 0.01
 
@@ -341,6 +336,9 @@ estimation:
     phi_pi  : [1.7985,1.0,2.5,normal,1.5,0.25]
     phi_y   : [0.0893,0.001,0.6,normal,0.125,0.05]
     phi_dy  : [0.2239,0.001,0.6,normal,0.125,0.05]
+    phi_sprd: [None,-0.2,0.6,normal,0.125,0.05]
+    #phi_qeb : [None,0.3,0.999,beta,0.95,0.05]
+    #phi_qek : [None,0.3,0.999,beta,0.95,0.05]
     rho     : [0.8258,0.5,0.975,beta,0.75,0.10]
 
     rho_r   : [.3,.01,.9999,beta,0.5,0.20]
@@ -352,7 +350,7 @@ estimation:
     rho_u   : [.2703,.01,.9999,beta,0.5,0.20]
     rho_lk    : [0.7, 0.01,.9999,beta, 0.5, 0.2]
 
-    rho_cbl : [0.7, 0.01,.9999,beta, 0.5, 0.2] 
+    rho_cbl : [0.7, 0.01,.9999,beta, 0.5, 0.2]
     rootb1  : [0.55, 0.001, 0.9999, beta, 0.5, 0.2 ]
     rootb2  : [0.55, 0.001, 0.9999, beta, 0.5, 0.2 ]
     rootk1  : [0.55, 0.001, 0.9999, beta, 0.5, 0.2 ]
@@ -361,7 +359,7 @@ estimation:
     mu_w    : [.8936,0.01,.9999,beta,0.5,0.2]
     rho_gz  : [0.05,0.01,2.0,normal,0.5,0.25]
 
-    ## representation of inv_gamma in terms of (mean, std)
+    ## representing inv_gamma in terms of (mean, std)
     sig_g    : [0.6090,0.01,3,inv_gamma,0.1,.25]
     sig_z    : [0.4618,0.01,3,inv_gamma,0.1,.25]
     sig_r    : [0.2397,0.01,3,inv_gamma,0.1,.25]
@@ -369,17 +367,16 @@ estimation:
     sig_p    : [0.1455,0.01,3,inv_gamma,0.1,.25]
     sig_w    : [0.2089,0.01,3,inv_gamma,0.1,.25]
     sig_u    : [0.1 ,0.025,5,inv_gamma,0.1,.25]
-    sig_lk   : [0.6090,0.01,5,inv_gamma,0.1,.25] 
-    sig_cbl  : [0.1, 0.01, 5, inv_gamma, 0.1, .25] 
+    sig_lk   : [0.6090,0.01,5,inv_gamma,0.1,.25]
+    sig_cbl  : [0.1, 0.01, 5, inv_gamma, 0.1, .25]
     sig_qe_b : [0.1, 0.01, 5, inv_gamma, 0.1, .25]
-    sig_qe_k : [0.1, 0.01, 5, inv_gamma, 0.1, .25] 
+    sig_qe_k : [0.1, 0.01, 5, inv_gamma, 0.1, .25]
 
-    kap_tau : [0.240,0.01,1.0,gamma, 0.3, 0.1] 
-    pac     : [2, 0.2, 5, gamma, 2, 4] 
-    LEV : [5, 1.5, 8, normal, 3, 1.] 
-    theta   : [0.855,0.001,0.9999,beta, 0.95, 0.05] 
-    lamb_cbl: [3.00, 0.001, 10, gamma, 3, 3] 
-    lamda    : [0.4,0.01,.9999,beta, 0.3, 0.1] 
+    kap_tau : [0.240,0.01,1.0,gamma, 0.3, 0.1]
+    pac     : [2, 0.2, 5, gamma, 2, 4]
+    LEV : [5, 1.5, 8, normal, 3, 1.]
+    theta   : [0.855,0.001,0.9999,beta, 0.95, 0.05]
+    lamb_cbl: [3.00, 0.001, 10, gamma, 3, 3]
 
     mean_term_spread :  [0.1975, 0.01, 2.0, gamma, 0.5, .1]
     mean_spread      : [.5,.1,2.,normal,.5,.1]
