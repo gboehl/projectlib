@@ -8,10 +8,6 @@ declarations:
     name: 'bgs_rnk'
     variables: [excessreturnkb, wh, dy, dc, di, dw, rd, mu, kh, bh, kb, bb, nu_n, rr, w, mc, cap, mpk, r, rn, keff, q, c, c_h2m, c_r, i, y, l, l_h2m, l_r, Pi, k, z, u, g, eps_p, eps_w, eps_r, eps_i, rk, eps_qe_b, eps_qe_b_GDP, eps_qe_k, eps_qe_k_GDP, rb, n, nn, nu_k, nu_b, b, omeg, qb,  excess_return_k, excess_return_b, lev, cbl, qe_all, wf, lf, lf_h2m, lf_r, keff_f, mpkf, capf, i_f, qf, rkf, yf, kf, cf, cf_h2m, cf_r, rrf, y_gap, lamb_k]
     constrained: [r]
-    shocks: [e_z, e_u, e_g, e_i, e_r, e_p, e_w, e_lk, e_qe_b, e_qe_k, e_cbl]
-    parameters: [mean_spread, mean_term_spread, pac, sig_l, mu_p, mu_w, rho_gz, L, tpr_beta, mean_Pi, mean_l, trend, alpha, sig_c, Phi_p, phiss, h, zeta_w, i_w, zeta_p, i_p, psi, phi_pi, rho, phi_y, phi_dy, rho_z, rho_u, rho_g, rho_i, rho_r, rho_p, rho_w, sig_z, sig_u, sig_g, sig_i, sig_r, sig_p, sig_w, sig_qe_b, sig_qe_k, delta, lamb_w, G_Y, epsilon, kap_tau, theta, LEV, B_Y, mat, r_c, lamb_cbl, lamda, rho_cbl, sig_cbl, rho_lk, sig_lk, elb_level, rootb1, rootb2, rootk1, rootk2, phi_sprd, phi_qeb, phi_qek]
-    para_func: [MC, gamma, lamb_p, beta, PI, betabar, RN, R, RB, RK, RCBL, MPK, W, k_1, I_K, L_K, K_Y, I_Y, C_Y, rkky, c_2, wly, conster, kappa, kappa_w, QB, KB_Y, KH_Y, BB_Y, BH_Y, N_Y, D_Y, N_O, N_N, omega, asset_growth, OM, NU_N, NU_B, NU_K, LAMB_K, lamb_b, MU, x_bar, Y, C, N, B, K, KB, KH, BB, BH, NU_CBL, rho_qe_b1, rho_qe_k1, rho_qe_b2, rho_qe_k2]
-    observables: [GDP, Cons, Inv, Lab, Infl, Wage, FFR, CBL, CB_Loans, CB_Bonds_10Y, GZSpread]
 
 equations:
   model:
