@@ -25,10 +25,14 @@ rc('legend', fontsize=18)
 
 # load stuff
 
-AA = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/AA.txt', delimiter=',')
-BB = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/BB.txt', delimiter=',')
-CC = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/CC.txt', delimiter=',')
-vv = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/list_of_vars.txt', delimiter=',', dtype=str)
+# AA = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/AA.txt', delimiter=',')
+# BB = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/BB.txt', delimiter=',')
+# CC = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/CC.txt', delimiter=',')
+# vv = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/list_of_vars.txt', delimiter=',', dtype=str)
+AA = np.loadtxt('/home/gboehl/rsh/stuff/blh_local/archiv/matrices/HANK2_BAYERETAL/AA.txt', delimiter=',')
+BB = np.loadtxt('/home/gboehl/rsh/stuff/blh_local/archiv/matrices/HANK2_BAYERETAL/BB.txt', delimiter=',')
+CC = np.loadtxt('/home/gboehl/rsh/stuff/blh_local/archiv/matrices/HANK2_BAYERETAL/CC.txt', delimiter=',')
+vv = np.loadtxt('/home/gboehl/rsh/stuff/blh_local/archiv/matrices/HANK2_BAYERETAL/list_of_vars.txt', delimiter=',', dtype=str)
 vv = np.array([v[2:-1] for v in vv])
 
 
@@ -327,13 +331,14 @@ def gen_sys(self, AA0, BB0, CC0, DD0, fb0, fc0, fd0, ZZ0, ZZ1, l_max, k_max, get
     gg = Q @ gg
 
     solver = 'klein' # to be implemented
+    # solver = 'speed_kills' # to be implemented
 
+    stx = timer()
     if solver == 'speed_kills':
         omg, lam = speed_kills(PU, MU, dimp, dimq, tol=1e-4)
     else:
-        stx = timer()
         omg, lam = klein(PU, MU, nstates=dimq, verbose=verbose, force=False)
-        time_klein = timer() - stx
+    time_lin = timer() - stx
 
     # finally add relevant stuff to the class
 
@@ -353,7 +358,7 @@ def gen_sys(self, AA0, BB0, CC0, DD0, fb0, fc0, fd0, ZZ0, ZZ1, l_max, k_max, get
         print('[get_sys:]'.ljust(15, ' ')+' Creation of system matrices finished in %ss.' %
               np.round(time.time() - st, 3))
 
-    return time_klein, time_preprocess
+    return time_lin, time_preprocess
 
 
 times_hank = []
@@ -361,7 +366,7 @@ for _ in tqdm.tqdm(range(20)):
     times = gen_sys_from_dict(mdict, l_max=3, k_max=30, parallel=False, force_processing=True, verbose=False)
     times_hank.append(times)
 
-yaml = '/home/gboehl/rsh/yamls/rank.yaml'
+yaml = '/home/gboehl/rsh/yamls_pydsge/rank.yaml'
 
 mod = DSGE.read(yaml, verbose=True)
 p = mod.set_par('calib', verbose=True)
@@ -371,8 +376,12 @@ for _ in tqdm.tqdm(range(20)):
     times = gen_sys_from_yaml(mod, l_max=3, k_max=30, parallel=False, verbose=False)
     times_rank.append(times)
 
-print('mean (std) Klein times RANK: %s (%s)' %(np.array(times_rank)[:,0].mean(), np.array(times_rank)[:,0].std()))
-print('mean (std) processing times RANK: %s (%s)' %(np.array(times_rank)[:,1].mean(), np.array(times_rank)[:,1].std()))
-print('mean (std) Klein times HANK: %s (%s)' %(np.array(times_hank)[:,0].mean(), np.array(times_hank)[:,1].std()))
-print('mean (std) processing times HANK: %s (%s)' %(np.array(times_hank)[:,1].mean(), np.array(times_hank)[:,1].std()))
+
+print('RANK')
+print('Solving linear model & %1.3e & %1.3e & -- \\\\' %(np.array(times_rank)[:,0].mean(), np.array(times_rank)[:,0].std()))
+print('Preprocessing OBC & %1.3e & %1.3e & -- \\\\' %(np.array(times_rank)[:,1].mean(), np.array(times_rank)[:,1].std()))
+
+print('HANK')
+print('Solving linear model & %1.3e & %1.3e & -- \\\\' %(np.array(times_hank)[:,0].mean(), np.array(times_hank)[:,0].std()))
+print('Preprocessing OBC & %1.3e & %1.3e & -- \\\\' %(np.array(times_hank)[:,1].mean(), np.array(times_hank)[:,1].std()))
 
