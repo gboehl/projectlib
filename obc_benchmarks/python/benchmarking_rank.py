@@ -9,15 +9,10 @@ from grgrlib import *
 from timeit import default_timer as timer
 from pydsge.engine import *
 
-dfile0 = '/home/gboehl/rsh/bs0/npz/rank_short0_meta.npz'
+yamlf = '/home/gboehl/repos/projectlib/obc_benchmarks/python/rank.yaml'
 
-mod = DSGE.load(dfile0, force_parse=False)
-mod.load_estim()
-mod.set_par('post_mode', k_max = 30)
-
-# dd = mod.get_par(asdict=True)[0]
-# for key in dd:
-    # print(key, '=', dd[key], ';')
+mod = DSGE.read(yamlf, verbose=True)
+p = mod.set_par('calib', k_max = 30)
 
 np.random.seed(0)
 nsamples = int(1e6)
