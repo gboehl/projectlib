@@ -15,10 +15,15 @@ rc('legend', fontsize=18)
 
 # load stuff
 
-AA = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/AA.txt', delimiter=',')
-BB = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/BB.txt', delimiter=',')
-CC = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/CC.txt', delimiter=',')
-vv = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/list_of_vars.txt', delimiter=',', dtype=str)
+# AA = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/AA.txt', delimiter=',')
+# BB = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/BB.txt', delimiter=',')
+# CC = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/CC.txt', delimiter=',')
+# vv = np.loadtxt('/home/gboehl/rsh/blh/matrices/HANK2_BAYERETAL/list_of_vars.txt', delimiter=',', dtype=str)
+AA = np.loadtxt('/home/gboehl/rsh/zlb/hank_matrices/AA.txt', delimiter=',')
+AA.shape
+BB = np.loadtxt('/home/gboehl/rsh/zlb/hank_matrices/BB.txt', delimiter=',')
+CC = np.loadtxt('/home/gboehl/rsh/zlb/hank_matrices/CC.txt', delimiter=',')
+vv = np.loadtxt('/home/gboehl/rsh/zlb/hank_matrices/list_of_vars.txt', delimiter=',', dtype=str)
 vv = np.array([v[2:-1] for v in vv])
 
 
