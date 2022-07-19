@@ -20,15 +20,7 @@ A description of the models is included in the README file in the folder.
 ## `mp_spec`
 ### Codes for "Monetary Policy and Speculative Asset Markets"
 
-The *.py files are the following:
-  
-   * base.py: definitions of functions used by other files.
-   * oos.py: bifurcation diagrams for phi_s, alpha and gamma (Figure 2 and Figures in Appendix D). Chose in the first paragraph of the code which diagram to plot.
-   * coef.py: code for Figure 1.
-   * msm.py: code for method of simulated moments. Chose in the first paragraph of the code which model to estimate (with or without exogenous shocks to stock prices, with or without behavioral speculation).
-   * vars.py: code for Figure 3.
-
-Additionally I provide the data files (*.xlsx) containing the data as described in the paper.
+A description is included in the README file in the folder.
 
 ## `re_chaos`
 ### Codes for "On the Evolutionary Fitnes of Rationality" (with Cars Hommes)
