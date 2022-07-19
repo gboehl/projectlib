@@ -118,7 +118,3 @@ constraint_difference_ = process_constraint(constraint_,'_difference',Mbase_.end
 
 constraint_relax_difference_ = process_constraint(constraint_relax_,'_difference',Mbase_.endo_names,0);
 
-
-
-
-

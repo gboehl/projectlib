@@ -1,13 +1,22 @@
 %% benchmarking occbin 2019
+%% use Dynare 5.1
 clear
+
+import occbin.*
 
 rng('default'); rng(1);
 
+%N = 100;
 N = 1e6;
 
-mu = zeros(55,1);
-sig = diag(ones(55,1)*10);
-X = mvnrnd(mu, sig, N); 
+mu = zeros(23,1);%zeros(55,1);
+load('lyapunov_cov.mat');
+sig = cov*10;%diag(ones(55,1)*10);
+Y = mvnrnd(mu, sig, N); 
+X = zeros(N,55);
+
+pos = [4 6 8 12 20 22 23 24 25 26 27 28 31 36 43 53 54 5 9 14 19 30 33]; 
+X(:,pos) = Y;
 
 global M_ oo_
 
@@ -38,7 +47,7 @@ for n=1:N
 
 end
 
-save nperiods30 Ls Ks flags Ts
+save nperiods30 Ls Ks flags Ts Y
 
 display(mean(Ts))
 display(mean(Ls))
