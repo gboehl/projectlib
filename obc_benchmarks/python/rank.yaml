@@ -5,7 +5,7 @@
 
 declarations:
   name: 'sw_h2m'
-  variables: [dc, dy, di, dw, c, c_r, c_h2m, r, rn, i, q, k, kb, rk, w, wh, l, l_r, l_h2m, Pi, y, mc, z, u, g, eps_i, eps_p, eps_w, eps_r, cf, cf_r, cf_h2m, rf, i_f, qf, kf, kbf, rkf, whf, lf, lf_r, lf_h2m, yf, y_gap]
+  variables: [dc, dy, di, dw, c, c_r, c_h2m, r, rn, i, q, k, kb, rk, w, wh, l, l_r, l_h2m, Pi, y, mc, z, u, g, eps_i, eps_p, eps_w, eps_r, cf, cf_r, cf_h2m, rf, i_f, qf, kf, kbf, rkf, whf, lf, lf_r, lf_h2m, yf, y_gap, e_p_lag, e_w_lag, e_p_VAR, e_w_VAR]
   constrained: [r]
   shocks: [e_g, e_z, e_u, e_r, e_i, e_p, e_w]
   parameters: [tpr_beta, lamb, lamb_w, phi_dy, h, phiss, i_p, i_w, alpha, epsilon, zeta_w, zeta_p, sig_c, sig_l, Phi_p, psi, rho_g, rho_u, rho_z, rho_p, rho_i, rho_w, rho_r, rho, mu_p, mu_w, phi_pi, phi_y, L, G_Y, sig_z, sig_g, sig_i, sig_r, sig_p, sig_w, sig_u, delta, trend, mean_l, mean_Pi, rho_gz, elb_level ]
@@ -59,9 +59,14 @@ equations:
     - eps_r     = rho_r*eps_r(-1) + e_r
 
     - g     = rho_g*g(-1) + e_g + rho_gz*e_z
-    - eps_p = rho_p*eps_p(-1) + e_p - mu_p*e_p(-1)
-    - eps_w = rho_w*eps_w(-1) + e_w - mu_w*e_w(-1)
+    - eps_p = rho_p*eps_p(-1) + e_p - mu_p*e_p_lag
+    - eps_w = rho_w*eps_w(-1) + e_w - mu_w*e_w_lag
     - rn     =  rho*rn(-1) + (1-rho)*(phi_pi*Pi + phi_y*y_gap + phi_dy*(y_gap-y_gap(-1))) + eps_r
+
+    - e_p_VAR = e_p
+    - e_w_VAR = e_w
+    - e_p_lag = e_p_VAR(-1)
+    - e_w_lag = e_w_VAR(-1)
 
   constraint:
     - r     =  rn

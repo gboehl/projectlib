@@ -1,0 +1,50 @@
+# Description: container for values relevant for estimation of one-asset-hank
+# Author: Gregor Boehl [mail@gregorboehl.com]
+# Last-Updated: 03/16/22
+
+declarations:
+  name: 'hank2_sw'
+  shocks: # shock_name : order
+    Z: 1
+    rstar: 1
+    G: 1
+    markup_w: 1
+    markup: 1
+    rinv_shock: 1
+    beta: 1
+    #omega: 1
+    #sigma_z: 1
+    #tau: 1
+  #observables: [dY, pi, i, dC, n_obs, dI, dW, top10y_obs, top10w_obs]
+  observables: [dY, pi, i, dC, n_obs, dI, dW]
+
+estimation:
+  prior:
+    ## uniform function take upper & lower as input
+    ## inv_gamma_dynare function takes weird stuff as input
+    ## all other function take mean & std as input
+
+    # applies to ALL ARMA coeffs:
+    AR_COEF: [beta, 0.5, 0.20]
+    SIG_COEF: [inv_gamma, 0.1, 0.25]
+
+    sig_c : [normal,1.5,0.375] 
+    sig_l : [normal,2.0,0.75] # fine
+    chi0 : [gamma,0.2,0.15] # fine
+    tau : [beta,0.2,0.1] # 27%
+    sigma_z: [normal, 1., 0.4] # fine
+
+    phiss : [gamma, 4., 2.]
+    zeta_p : [beta,0.5,0.1]
+    zeta_w : [beta,0.5,0.1]
+    iota_p : [beta,0.5,0.15]
+    iota_w : [beta,0.5,0.15]
+
+    phi_pi : [gamma, 1.5, 0.25]
+    phi_y : [gamma, 0.125, 0.05]
+    rho : [beta,0.75,0.10]
+
+    ybar : [normal,0.4,0.10]
+    nbar : [normal,0.0,2.0]
+    pistar : [gamma,0.625,0.1]
+    rstar: [gamma,1.25,0.1]
