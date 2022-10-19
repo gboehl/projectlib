@@ -1,10 +1,9 @@
+
 import numpy as np
-
 from sequence_jacobian import simple, solved, combine, create_model, grids, hetblocks
+from grgrlib.hanktools import load_model
 
-import grgrwip.ssjtools as gsj
-
-model = gsj.load_model('/home/gboehl/rsh/emc/yamls/hank2_hh.py')
+model = load_model('/home/gboehl/rsh/emc/yamls/hank2_hh.py')
 hh = model.hh
 
 
@@ -225,16 +224,12 @@ def dag():
     calibration['i'] = calibration['rstar']/100 # from taylor
     calibration['r'] = (1 + calibration['i']) / (1 + calibration['pi']) - 1 # from fisher
 
-    load_inits = np.load('/home/gboehl/rsh/emc/npz/init_vals_small_grid.npz')
-    # load_inits = np.load('/home/gboehl/rsh/emc/npz/init_vals_med_grid.npz')
-    # load_inits = np.load('/home/gboehl/rsh/emc/npz/init_vals_large_grid.npz')
+    load_inits = np.load('ressources/init_vals_small_grid.npz')
 
     unknowns_ss = {
         'beta': float(load_inits['beta']),
         'chi1': float(load_inits['chi1']),
     }
-    # calibration['Va_init'] = None
-    # calibration['Vb_init'] = None
     calibration['Va_init'] = load_inits['Va']
     calibration['Vb_init'] = load_inits['Vb']
 
