@@ -1,23 +1,24 @@
-
 import numpy as np
-from sequence_jacobian import simple, solved, combine, create_model, grids, hetblocks
-from grgrlib.hanktools import load_model
 
-model = load_model('/home/gboehl/rsh/emc/yamls/hank2_hh.py')
+from sequence_jacobian import simple, solved, combine, create_model, grids, hetblocks
+
+import grgrlib.hanktools as gsj
+
+model = gsj.load_model('/home/gboehl/rsh/emc/yamls/hank2_hh.py')
 hh = model.hh
 
 
 '''Part 1: Blocks'''
 
 @simple
-def pricing(pi, mc, r, Y, zeta_p, mup, markup, pistar, beta, iota_p):
+def pricing(pi, mc, zeta_p, mup, eps_p, pistar, beta, iota_p):
 
     kappap = (1-zeta_p*beta)*(1-zeta_p) / ((1 + iota_p*beta)*zeta_p)
     pistarlog = (1+pistar/100).apply(np.log) 
 
     nkpc = 1/(1 + beta*iota_p)*(beta*((1+pi(+1)).apply(np.log) - pistarlog) + iota_p*((1+pi(-1)).apply(np.log) - pistarlog)) \
             + kappap*(mc - 1/mup) \
-            + markup \
+            + eps_p \
             - ((1 + pi).apply(np.log) - pistarlog)
 
     return nkpc
@@ -30,18 +31,18 @@ def arbitrage(div, p, r):
 
 
 @simple
-def labor(Y, w, K, Z, alpha):
-    N = (Y / Z / K(-1) ** alpha) ** (1 / (1 - alpha))
+def labor(Y, w, K, Z, eps_z, alpha):
+    N = (Y / Z / eps_z.apply(np.exp) / K(-1) ** alpha) ** (1 / (1 - alpha))
     mc = w * N / (1 - alpha) / Y
     return N, mc
 
 
 @simple
-def investment(Q, K, I, r, N, mc, Z, delta, phiss, alpha, rinv_shock):
+def investment(Q, K, I, r, N, mc, Z, delta, phiss, alpha, eps_i, eps_z):
     x = I/I(-1)
     xPrime = I(+1)/I
-    inv = rinv_shock*Q*(1 - 1/(2*phiss)*(x - 1)**2 - 1/phiss*(x - 1)*x) + rinv_shock(+1)*Q(+1)/((1+r(+1))*phiss)*(xPrime-1)*xPrime**2 - 1
-    val = (1+r(+1))*Q - (1-delta)*Q(+1) - alpha * Z(+1) * (N(+1) / K) ** (1 - alpha) * mc(+1)
+    inv = eps_i.apply(np.exp)*Q*(1 - 1/(2*phiss)*(x - 1)**2 - 1/phiss*(x - 1)*x) + eps_i(+1).apply(np.exp)*Q(+1)/((1+r(+1))*phiss)*(xPrime-1)*xPrime**2 - 1
+    val = (1+r(+1))*Q - (1-delta)*Q(+1) - alpha * Z * eps_z(+1).apply(np.exp)* (N(+1) / K) ** (1 - alpha) * mc(+1)
     return inv, val
 
 
@@ -54,21 +55,20 @@ def dividend(Y, I, w, N, K, delta, phiss):
 
 
 @simple
-def monetary(i, pi, Y, rstar, pistar, phi_pi, phi_y, rho):
-    # add flex-price equilibrium?
-    taylor = rho*i(-1) + (1-rho)*(rstar + phi_pi*(pi-pistar/100)  + phi_y*(Y-Y(-1))) - i
+def monetary(i, pi, Y, rstar, pistar, eps_r, phi_pi, phi_y, rho):
+    taylor = rho*i(-1) + (1-rho)*(rstar/100 + phi_pi*(pi-pistar/100)  + phi_y*(Y.apply(np.log) - Y(-1).apply(np.log))) + eps_r - i
     return taylor
 
 
 @simple
-def fiscal(r, w, N, G, Bg):
-    tax = (r * Bg + G) / w / N
+def fiscal(r, w, N, G, eps_g, Bg):
+    tax = (r * Bg + G*eps_g.apply(np.exp)) / w / N
     return tax
 
 
 @simple
-def finance(i, p, pi, r, div, omega, pshare):
-    rb = r - omega
+def finance(i, p, pi, r, div, omega, eps_omega, pshare):
+    rb = r - omega*eps_omega.apply(np.exp)
     ra = pshare(-1) * (div + p) / p(-1) + (1 - pshare(-1)) * (1 + r) - 1
     fisher = 1 + i(-1) - (1 + r) * (1 + pi)
     return rb, ra, fisher
@@ -81,24 +81,24 @@ def wage(pi, w):
 
 
 @simple
-def union(piw, N, tax, w, UCE, zeta_w, muw, vphi, sig_l, beta, markup_w, iota_w, pistar):
+def union(piw, N, tax, w, UCE, zeta_w, muw, vphi, sig_l, beta, eps_w, iota_w, pistar):
 
     kappaw = (1-zeta_w*beta)*(1-zeta_w) / ((1 + iota_w*beta)*zeta_w)
     pistarlog = (1+pistar/100).apply(np.log) 
 
     wnkpc = 1/(1 + beta*iota_w)*(beta*((1 + piw(+1)).apply(np.log) - pistarlog) + iota_w*((1 + piw(-1)).apply(np.log) - pistarlog)) \
             + kappaw*(vphi * N ** (1 + sig_l) - (1 - tax)*w*N*UCE/muw) \
-            + markup_w \
+            + eps_w \
             - ((1 + piw).apply(np.log) - pistarlog)
 
     return wnkpc
 
 
 @simple
-def mkt_clearing(p, A, B, Bg, C, I, G, CHI, omega, Y):
+def mkt_clearing(p, A, B, Bg, C, I, G, eps_g, CHI, omega, eps_omega, Y):
     wealth = A + B
     asset_mkt = p + Bg - wealth
-    goods_mkt = C + I + G + CHI + omega * B - Y
+    goods_mkt = C + I + G*eps_g.apply(np.exp) + CHI + omega * eps_omega.apply(np.exp) * B - Y
     return asset_mkt, wealth, goods_mkt
 
 
@@ -137,7 +137,7 @@ def union_ss(tax, w, UCE, N, muw, sig_l):
 
 
 @simple
-def measurement(Y, C, I, w, N, TOP10Y, TOP10W, ybar, nbar):
+def measurement(Y, C, I, w, N, TOP10Y, TOP10W):
     # trivially true since ln(x) - ln(xSS) ~= (x-xSS)/xSS
     dY = Y.apply(np.log) - Y(-1).apply(np.log) 
     dC = C.apply(np.log) - C(-1).apply(np.log)
@@ -153,31 +153,37 @@ def measurement(Y, C, I, w, N, TOP10Y, TOP10W, ybar, nbar):
 
 '''Part 2: Embed HA block'''
 
-def make_grids(bmax, amax, kmax, nB, nA, nK, nZ, rho_z, sigma_z):
+def make_grids(bmax, amax, kmax, nB, nA, nK, nZ, rho_z, sigma_z, eps_sigma):
     b_grid = grids.agrid(amax=bmax, n=nB)
     a_grid = grids.agrid(amax=amax, n=nA)
     k_grid = grids.agrid(amax=kmax, n=nK)[::-1].copy()
-    e_grid, pi_e, Pi = grids.markov_rouwenhorst(rho=rho_z, sigma=sigma_z, N=nZ)
+    e_grid, pi_e, Pi = grids.markov_rouwenhorst(rho=rho_z, sigma=sigma_z*np.exp(eps_sigma), N=nZ)
     return b_grid, a_grid, k_grid, e_grid, Pi, pi_e
 
 
-def income(e_grid, tax, w, N, pi_e, tau):
+def income(e_grid, tax, w, N, pi_e, tau, eps_tau):
     # redistribute, but keep total amount of income fix
     y_grid = (1 - tax) * w * N * e_grid
-    z_grid = y_grid**(1-tau) + np.sum(pi_e*(y_grid - y_grid**(1-tau)))
+    z_grid = y_grid**(1-tau*np.exp(eps_tau)) + np.sum(pi_e*(y_grid - y_grid**(1-tau*np.exp(eps_tau))))
     return z_grid
 
 # a measurement function
-def dist_measures(a, b, a_grid, b_grid, z_grid, rb, ra, e_grid, D):
+def dist_measures(a, b, a_grid, b_grid, z_grid, rb, ra, D):
 
-    # each measure must have the shape of the distribution
+    # each measure must have the shape of the distribution and will be dot-multiplied by D
     inc = z_grid[:,np.newaxis,np.newaxis] + (1 + rb)*b_grid[:, np.newaxis] + (1 + ra) * a_grid
-    D_sorted_inc = D.flatten()[np.argsort(inc.flatten())]
-    top10y = inc.flatten()[np.cumsum(D_sorted_inc) > .9].sum()/inc.sum() * np.ones_like(D)
+    inc_sortinds = np.argsort(inc.flatten())
+    D_sorted = D.flatten()[inc_sortinds]
+    inc_sorted = inc.flatten()[inc_sortinds]
+    top10inds = np.cumsum(D_sorted) > .9
+    top10y = np.vdot(D_sorted[top10inds],inc_sorted[top10inds])/np.vdot(D,inc) * np.ones_like(D)
 
-    wth = b + a
-    D_sorted_wth = D.flatten()[np.argsort(wth.flatten())]
-    top10w = wth.flatten()[np.cumsum(D_sorted_wth) > .9].sum()/wth.sum() * np.ones_like(D)
+    wealth = b + a
+    wealth_sortinds = np.argsort(wealth.flatten())
+    D_sorted = D.flatten()[wealth_sortinds]
+    wealth_sorted = wealth.flatten()[wealth_sortinds]
+    top10inds = np.cumsum(D_sorted) > .9
+    top10w = np.vdot(D_sorted[top10inds],wealth_sorted[top10inds])/np.vdot(D,wealth) * np.ones_like(D)
 
     return top10y, top10w
 
@@ -200,25 +206,27 @@ def dag():
 
     # # Steady State
     calibration = {'Y': 1., 'N': 1.0, 'K': 10., 'Q': 1, 'I': 0.2,
+                   # steady state values
                    'pistar': 0.625, 
                    'rstar': 1.25, 
                    'ybar': 0.4,
                    'nbar': 2,
                    'tot_wealth': 14, 
-                   'markup_w': 0, 'markup': 0, 'rinv_shock': 1.,
                    'delta': 0.02, 'muw': 1.1, 'Bh': 1.04, 'Bg': 2.8,
                    'G': 0.2, 
+                   # exogenous shocks
+                   'eps_r': 0, 'eps_z': 0, 'eps_g': 0, 'eps_w': 0, 'eps_p': 0, 'eps_i': 0., 'eps_beta': 0., 'eps_omega': 0., 'eps_sigma': 0., 'eps_tau': 0.,
+                   # model parameters
                    'sig_c': 1.5, 'sig_l': 2., 'sigma_z': 1.5, 'tau': 0.2, 
                    'chi0': 0.25, 'chi2': 2, 'phiss': 4,
                    'omega': 0.005, 'phi_pi': 1.5, 'phi_y': 0.125, 'rho': 0.75,
                    'zeta_p': 0.5, 'zeta_w': 0.5,
                    'iota_p': 0.3, 'iota_w': 0.3, 
-                   # 'nZ': 3, 'nB': 50, 'nA': 70, 'nK': 50, # large (from ssj rep codes)
-                   # 'nZ': 3, 'nB': 25, 'nA': 35, 'nK': 25, # medium
-                   'nZ': 3, 'nB': 10, 'nA': 16, 'nK': 4, # small (from ssj examples)
-                   'bmax': 50, 'amax': 4000, 'kmax': 1, 
-                   'rho_z': 0.966, 
-                  } 
+                   # numerical parameters
+                   'nZ': 3, 'nB': 10, 'nA': 16, 'nK': 4,
+                   'bmax': 50, 'amax': 4000, 'kmax': 1,
+                   'rho_z': 0.966,
+                  }
 
     calibration['pi'] = calibration['pistar']/100
     calibration['i'] = calibration['rstar']/100 # from taylor
@@ -240,6 +248,6 @@ def dag():
     # Transitional Dynamics/Jacobian Calculation
     unknowns = ['r', 'w', 'Y', 'i', 'pi', 'Q', 'K', 'I']
     targets = ['asset_mkt', 'fisher', 'wnkpc', 'taylor', 'nkpc', 'inv', 'val', 'I_res']
-    exogenous = ['rstar', 'Z', 'G', 'markup_w', 'markup', 'rinv_shock', 'beta', 'omega', 'sigma_z', 'tau']
+    exogenous = ['eps_r', 'eps_z', 'eps_g', 'eps_w', 'eps_p', 'eps_i', 'eps_beta', 'eps_omega', 'eps_sigma', 'eps_tau']
 
     return two_asset_model_ss, ss, unknowns_ss, targets_ss, two_asset_model, unknowns, targets, exogenous
