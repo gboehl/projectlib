@@ -1,11 +1,13 @@
-# rank.yaml ---
+# fnk.yaml ---
 #
-# Description: variant of Smets & Wouters model
-# Authors: Felix Strobel [felix.strobel@bundesbank.de] & Gregor Boehl [gboehl@uni-bonn.de]
+# Description: a small NK-FF model
+# Author: Gregor Boehl [mail@gregorboehl.com]
+# Last-Updated: 02/03/20
 #
 
+
 declarations:
-  name: 'financial_NK'
+  name: 'financial NK'
   variables: [Pi, y, r, rn, mc, s, n, c, l, w, dy, a, u, vr, b]
   constrained: [r]
   parameters: [beta, zeta, sigma, eta, theta, nu, psi, phi_pi, phi_y, rho_a, rho_u, rho_b, rho_r, sig_a, sig_u, sig_b, sig_r, trend, mean_pi, mean_spread, elb_level]
