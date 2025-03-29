@@ -3,6 +3,8 @@
 # Description: a small NK-FF model
 # Author: Gregor Boehl [mail@gregorboehl.com]
 # Last-Updated: 02/03/20
+#
+
 
 declarations:
   name: 'financial NK'
