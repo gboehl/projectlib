@@ -1,12 +1,13 @@
 
 # Project Codes
 
-The full papers can be found on my [website](gregorboehl.com)
+The full papers can be found on my [website](gregorboehl.com).
 
 ## Notebooks
 
 The notebooks should be self explanatory.
 
+* [climate_dist_bb.ipynb](https://github.com/gboehl/projectlib/tree/master/climate_dist_bb.ipynb): Codes for "Carbon Taxes vs. Green Subsidies: Generational Conflicts and Distributional Consequences"
 * [hank_speed_boehl.ipynb](https://github.com/gboehl/projectlib/tree/master/hank_speed_boehl.ipynb): Codes for "HANK on Speed: Robust Nonlinear Solutions using Automatic Differentiation"
 * [hockey_pc_bl.ipynb](https://github.com/gboehl/projectlib/tree/master/hockey_pc_bl.ipynb): Codes for "The Hockey Stick Phillips Curve and the Zero Lower Bound"
 * [monetary_financing_boehl.ipynb](https://github.com/gboehl/projectlib/tree/master/monetary_financing_boehl.ipynb): Codes for "The Political Economy of Monetary Financing without Inflation"
