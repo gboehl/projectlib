@@ -7,6 +7,7 @@ The full papers can be found on my [website](gregorboehl.com).
 
 The notebooks should be self explanatory.
 
+* [bczlb_BS.ipynb](https://github.com/gboehl/projectlib/tree/master/bczlb_BS.ipynb): Codes for "Estimation of DSGE Models with the Effective Lower Bound" and "The Empirical Performance of the Financial Accelerator since 2008"
 * [dist_climate_bb.ipynb](https://github.com/gboehl/projectlib/tree/master/dist_climate_bb.ipynb): Codes for "Carbon Taxes vs. Green Subsidies: Generational Conflicts and Distributional Consequences"
 * [hank_speed_boehl.ipynb](https://github.com/gboehl/projectlib/tree/master/hank_speed_boehl.ipynb): Codes for "HANK on Speed: Robust Nonlinear Solutions using Automatic Differentiation"
 * [hockey_pc_bl.ipynb](https://github.com/gboehl/projectlib/tree/master/hockey_pc_bl.ipynb): Codes for "The Hockey Stick Phillips Curve and the Zero Lower Bound"
