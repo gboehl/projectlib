@@ -1,6 +1,14 @@
 
 # replication files for "A Structural Investigation of Quantitative Easing" (Boehl, Goy, Strobel)
 
+While the setup below allows to exactly reproduce the results from the paper, the **recommended** way to do this is to use the current version of the packacke. The estimation should then be done using this script (adjusted for the correct model):
+
+- https://github.com/gboehl/projectlib/blob/master/bczlb_BS/estimation_scipt.py
+  
+This should be significantly faster than the original way while providing qualitatively the same results. All relevant files are provided.
+
+
+
 ## Files included
 - readme.md
 - folder `data`:
@@ -20,7 +28,7 @@
     - irfs2.py (script to reproduce Figure 4)
     - shock_decomposition.py (script to reproduce the historic shock decompositions from the appendix)
 - folder `output`:
-    - <empty>
+    - (it is empty)
 
     
 ## Installation of required packages
@@ -35,7 +43,7 @@ pip install git+https://github.com/gboehl/econsieve.git@bgs_version
 
 If you are unfamiliar with `pip`, we provide a short guide here:
 
-    https://pydsge.readthedocs.io/en/latest/installation_guide.html
+- https://pydsge.readthedocs.io/en/latest/installation_guide.html
 
 
 ## Code and description
