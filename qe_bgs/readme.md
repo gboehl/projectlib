@@ -1,5 +1,5 @@
 
-# replication files for "A Structural Investigation of Quantitative Easing" (Boehl, Goy, Strobel)
+# Replication files for "A Structural Investigation of Quantitative Easing" (Boehl, Goy, Strobel)
 
 While the setup below allows to exactly reproduce the results from the paper, the **recommended** way to do this is to use the current version of the packacke. The estimation should then be done using this script (adjusted for the correct model):
 
